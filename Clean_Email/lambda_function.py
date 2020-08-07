@@ -3,7 +3,8 @@ import re
 from validate_email import validate_email
 import pymongo
 import urllib.parse
-
+
+
 def lambda_handler(event=None, context=None):    
 
     mailinglist = 'akash'
@@ -12,13 +13,14 @@ def lambda_handler(event=None, context=None):
     collection = db['yelpscrapermailinglist']
     record = collection.find_one({'name':mailinglist})
     
-    status = record['status']
-    print('Last Status',status)
-    record['status'] = 'Running'
+    #status = record['status']
+    #print('Last Status',status)
+    record['status'] = 'Cleaning'
     status = record['status']
     print('New status',status)
       
     return {
         'statusCode': 200,
         'body': json.dumps(status)
-    }
+    }
+
