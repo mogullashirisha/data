@@ -16,13 +16,12 @@ class Scraper:
         self.name = name
         self.keyword = keyword
         self.city = city
-        self.limit = limit + 1
+        self.limit = limit
         self.counter = 2
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
         self.final_result = set()
         
-
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -66,15 +65,6 @@ class Scraper:
         db = client['codemarket_akash']
         collection = db['yelpscrapermailinglist']
         return collection
-
-    def document_structure(self):
-        document = {'name': self.name,
-                    'limit': self.limit,
-                    'status': 'Running',
-                    'created by':'UI',
-                    'created timestamp': datetime.datetime.now()
-                    }
-        return document
 
     def scrape(self):
         url = 'https://www.yelp.com/search?find_desc='+self.keyword+'&find_loc='+self.city+'&ns=1'
@@ -165,9 +155,11 @@ class Scraper:
                         self.AllInternalEmails.clear()
         print('End Scraping')
         collection = self.start_database()
-        document = self.document_structure()
-        document['collection of email scraped'] = repr(self.final_result)
-        collection.insert_one(document)
+        email_collection = repr(self.final_result)
+        query = {'name':self.name}
+        newvalues = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': 'Scraping Completed' } }
+        collection.update_one(query,newvalues)
+
         
     
 
@@ -176,14 +168,14 @@ if __name__ == '__main__':
     parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
     parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Therapist'),help='Enter keyword')
     parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Los Angeles, CA'),help='Enter city')
-    parser.add_argument('limit',type=int,nargs='?',default=10,help='Enter limit')
+    parser.add_argument('limit',type=int,nargs='?',default=1,help='Enter limit')
     args = parser.parse_args()
 
     name = args.name
     keyword = args.keyword
     city = args.city
-    limit = args.limit
-    print(keyword,city,limit)
+    limit = args.limit+1
+    print(name,keyword,city,limit)
 
     scraper_obj = Scraper(name,keyword,city,limit)
     scraper_obj.scrape()
