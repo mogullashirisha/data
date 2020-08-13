@@ -12,6 +12,7 @@ import datetime
 
 class Scraper:
     
+
     def __init__(self,userid,name,keyword,city,limit):
         self.userid = userid
         self.name = name
@@ -76,9 +77,11 @@ class Scraper:
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
         driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+
         #driver = webdriver.Chrome(r'C:/chromedriver.exe',chrome_options=chrome_options)
 
         print('Getting URL')
+
         driver.get(url)
         time.sleep(7)
         html = driver.page_source
@@ -91,6 +94,7 @@ class Scraper:
 
 
         print('Begin Scraping')
+
         self.limit = self.limit + 1
         for x in range(1, self.limit): 
             alllinks = updatedAllLinkPage
@@ -164,6 +168,7 @@ class Scraper:
         newvalues = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': 'Scraping Completed' } }
         collection.update_one(query,newvalues)
         print('Database Updated')
+
 
         
     

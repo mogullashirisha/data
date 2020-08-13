@@ -40,6 +40,7 @@ def lambda_handler(event, context):
                 }
         
         collection.insert_one(document)
+
     
     
     #encoding parameters
