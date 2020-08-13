@@ -5,8 +5,9 @@ import urllib.parse
 import argparse
 
 class Cleaner:
-    def __init__(self,mailinglist):
-        self.mailinglist = mailinglist
+    def __init__(self,userid,name):
+        self.userid = userid
+        self.name = name
 
     def get_collection(self):
         client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_akash?retryWrites=true&w=majority')
@@ -18,11 +19,12 @@ class Cleaner:
         new_email_collection = set()
         collection = self.get_collection()
         
-        query = {'name': self.mailinglist}
+        query = {'user_id':self.userid,'name': self.name}
         document = collection.find_one(query)
         #print(document['collection of email scraped'])
         email_collection = eval(document['collection of email scraped'])
-        print(email_collection)
+
+        print('Cleaning Started')
         for dictionary in email_collection:
             record = eval(dictionary)
             scraped_emails = record['Emails']
@@ -41,26 +43,28 @@ class Cleaner:
                 record['cleaned email'] = ''
                 
             record['cleaned_timestamp'] = str(datetime.datetime.now())
-            print(datetime.datetime.now())
+            record['cleaned_by'] = 'UI'
+            
             new_email_collection.add(repr(record))
 
+        print('Cleaning Completed')
         email_collection = repr(new_email_collection)
-
-        print()
-        print(email_collection)
-        newvalues = { "$set": { 'collection of email scraped': email_collection,'status': 'Completed' } }
+        print('Updating Database')
+        newvalues = { "$set": { 'collection of email scraped': email_collection,'status': 'Cleaning Completed' } }
         collection.update_one(query,newvalues)
-        
+        print('Database Updated')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mailinglist',type=str,nargs='?',default='akash',help='Enter mailinglist')
+    parser.add_argument('user_id',type=str,nargs='?',default='123',help='Enter userid')
+    parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
     args = parser.parse_args()
 
-    mailinglist = args.mailinglist
-    print(mailinglist)
+    userid = args.user_id
+    name = args.name
+    print(userid,name)
 
-    cleaner_obj = Cleaner(mailinglist)
+    cleaner_obj = Cleaner(userid,name)
     cleaner_obj.clean()
 
     
