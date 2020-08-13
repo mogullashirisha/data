@@ -12,7 +12,8 @@ import datetime
 
 class Scraper:
     
-    def __init__(self,name,keyword,city,limit):
+    def __init__(self,userid,name,keyword,city,limit):
+        self.userid = userid
         self.name = name
         self.keyword = keyword
         self.city = city
@@ -75,8 +76,9 @@ class Scraper:
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
         driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+        #driver = webdriver.Chrome(r'C:/chromedriver.exe',chrome_options=chrome_options)
 
-        print('Get URL')
+        print('Getting URL')
         driver.get(url)
         time.sleep(7)
         html = driver.page_source
@@ -89,8 +91,8 @@ class Scraper:
 
 
         print('Begin Scraping')
-        
-        for x in range(1, limit): 
+        self.limit = self.limit + 1
+        for x in range(1, self.limit): 
             alllinks = updatedAllLinkPage
             for a in alllinks:
                 if a.text == str(self.counter) and int(a.text) <= self.limit:
@@ -154,30 +156,35 @@ class Scraper:
              
                         self.AllInternalEmails.clear()
         print('End Scraping')
+
+        print('Updating Database')
         collection = self.start_database()
         email_collection = repr(self.final_result)
-        query = {'name':self.name}
+        query = {'user_id':self.userid,'name':self.name}
         newvalues = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': 'Scraping Completed' } }
         collection.update_one(query,newvalues)
+        print('Database Updated')
 
         
     
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('user_id',type=str,nargs='?',default='123',help='Enter userid')
     parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
     parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Therapist'),help='Enter keyword')
     parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Los Angeles, CA'),help='Enter city')
     parser.add_argument('limit',type=int,nargs='?',default=1,help='Enter limit')
     args = parser.parse_args()
 
+    userid = args.user_id
     name = args.name
     keyword = args.keyword
     city = args.city
-    limit = args.limit+1
-    print(name,keyword,city,limit)
+    limit = args.limit
+    print(userid,name,keyword,city,limit)
 
-    scraper_obj = Scraper(name,keyword,city,limit)
+    scraper_obj = Scraper(userid,name,keyword,city,limit)
     scraper_obj.scrape()
 
 
