@@ -6,19 +6,25 @@ import os
 import time
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
+import pymongo
 import urllib.parse
+import argparse
+import datetime
 from sym_data import get_codes
 from sys import stdout
-import argparse
 
 class Scrapper():
 
-  def __init__(self, limit, keyword, loc):
+  def __init__(self, userid, name, limit, keyword, loc):
+    self.userid = userid
+    self.name = name
     self.limit = limit
     self.keyword = keyword
     self.loc = loc
     self.internal_links = set()
     self.internal_emails = set()
+    self.all_emails = set()
+
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
@@ -74,6 +80,7 @@ class Scrapper():
           self.get_internal_links(websitepage_soup,website_link)
     return (internal_links)
 
+
   def get_emails(self, url):
     self.driver.get(url)
     html = self.driver.page_source
@@ -123,43 +130,51 @@ class Scrapper():
           self.internal_links.clear()
 
           if len(self.internal_emails) == 0:
-              data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": "NULL"}
+              data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": " ","cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
           else:
-              data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": repr(self.internal_emails)}
-          self.search_results = pd.DataFrame()
-          self.search_results = self.search_results.append([data_dict])
-                      
-          try:
-              self.df = pd.read_csv(r'output.csv')
-          except:
-              self.df = pd.DataFrame()
+              data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": repr(self.internal_emails), "cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
 
-          if self.df.empty:
-              path = 'output.csv'
-              result_len = len(self.search_results)
-              if result_len > 0:
-                  self.search_results.to_csv(path, index=False, columns=["business_name", "site_url","EmailAddress"])
-          else:
-              self.search_results.to_csv(r'output.csv', index=False, mode='a', header=False, columns=["business_name", "site_url","EmailAddress"])
-          
+          self.all_emails.add(repr(data_dict))
+
           self.internal_emails.clear()
 
             # catch block
       except AttributeError:
         self.flag += 1
         print(f"trial:{self.flag}")
+      
+    return self.all_emails  
 
+  def start_database(self):
+    client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_akash?retryWrites=true&w=majority')
+    db = client['codemarket_akash']
+    collection = db['yelpscrapermailinglist']
+    return collection
+
+  def store_emails(self, all_emails = None):
+    collection = self.start_database()
+    if all_emails is not None:
+      email_collection = repr(all_emails)
+    else:
+      email_collection = repr(self.all_emails)
+    query = {'user_id':self.userid,'name':self.name}
+    new_values = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': 'Scraping Completed' } }
+    collection.update_one(query,new_values)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
+  parser.add_argument('user',type=str,nargs='?',default='123',help='Enter userid')
+  parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
   parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Therapist'),help='Enter keyword')
   parser.add_argument('loc',type=str,nargs='?',default=urllib.parse.quote_plus('Los Angeles, CA'),help='Enter city')
   parser.add_argument('limit',type=int,nargs='?',default=1,help='Enter limit')
   args = parser.parse_args()
 
+  user_id = args.user
+  name = args.name
   keyword = args.keyword
   loc = args.loc
   limit = args.limit
   
-  scrapper = Scrapper(limit, loc, keyword)
+  scrapper = Scrapper(user_id, name, limit, loc, keyword)
   scrapper.scrap()
