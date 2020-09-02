@@ -12,6 +12,7 @@ import argparse
 import datetime
 from sym_data import get_codes
 from sys import stdout
+from validate_email import validate_email
 
 class Scrapper():
 
@@ -24,19 +25,28 @@ class Scrapper():
     self.internal_links = set()
     self.internal_emails = set()
     self.all_emails = set()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-gpu")
-    self.driver = webdriver.Chrome('/usr/local/bin/chromedriver', chrome_options=chrome_options)
     
   def scrap(self):
-    for start in range(0, self.limit *10, 10):
-      url = self.get_url(start)    
-      # url = f'https://www.yelp.com/search?find_desc=Therapist&find_loc=Los+Angeles%2C+CA&ns=1&start={start}'
-      print(f'page:{start}')
-      self.get_emails(url)
+    self.flag = 0
+    self.no_email = True
+    while self.no_email and self.flag < 50:
+      chrome_options = Options()
+      chrome_options.add_argument("--headless")
+      chrome_options.add_argument("--no-sandbox")
+      chrome_options.add_argument("--disable-gpu")
+      self.driver = webdriver.Chrome('/usr/local/bin/chromedriver', chrome_options=chrome_options)
+      try:
+        for start in range(0, self.limit *10, 10):
+          url = self.get_url(start)    
+          # url = f'https://www.yelp.com/search?find_desc=Therapist&find_loc=Los+Angeles%2C+CA&ns=1&start={start}'
+          print(f'page:{start // 10}')
+          self.get_emails(url)
+          break
+      
+      except AttributeError:
+        self.flag += 1
+        print(f"trial:{self.flag}")
+    
 
   def get_url(self, start=0):
     # https://www.yelp.com/search?find_desc=Therapist&find_loc=San+Francisco%2C+CA&ns=1
@@ -75,7 +85,12 @@ class Scrapper():
           except:
             continue
           new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage.text, re.I))
-          self.internal_emails.update(new_emails)
+          only_valid = set()
+          for em in new_emails:
+            if validate_email(em):
+                only_valid.add(em)
+                print(em)
+          self.internal_emails.update(only_valid)
           websitepage_soup = BeautifulSoup(websitepage.text, 'html.parser')
           self.get_internal_links(websitepage_soup,website_link)
     return (internal_links)
@@ -84,70 +99,64 @@ class Scrapper():
   def get_emails(self, url):
     self.driver.get(url)
     html = self.driver.page_source
-    self.flag = 0
-    self.no_email = True
 
     soup = BeautifulSoup(html, 'html.parser')
     page_link_modefied = soup.find_all('a',class_="lemon--a__373c0__IEZFH link__373c0__1G70M pagination-link-component__373c0__9aHoC link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE")
-    bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
-        # added loop to try loading webpage
-    while self.no_email and self.flag < 50:
+    # added loop to try loading webpage
+    lilist = bussiness_list.findChildren(['li'])
+    for li in lilist:
+      # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
+      link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
+      if link == None:
+          continue
+      self.driver.get(f"https://www.yelp.com/{link['href']}")
+      profile = self.driver.page_source
+      profile_soup = BeautifulSoup(profile, 'html.parser')
+      self.website_link = None
+      business_website = profile_soup.find("p", string="Business website")
+      if business_website != None:
+        business_website_P = business_website.findNext('p')
+        if business_website_P != None:
+          business_website_a = business_website_P.find('a')
+          if business_website_a != None:
+            self.website_link = business_website_a
+      if self.website_link == None:
+          print(f"Link Not Found ----> https://www.yelp.com/{link['href']}")
+          continue
+      print(self.website_link.text)
       try:
-        lilist = bussiness_list.findChildren(['li'])
+          self.driver.get("http://" + self.website_link.text)
+      except:
+          print("error occurred")
+          continue
+      business_name = link.text
+      site_url = "http://" + self.website_link.text
+      websitepage = self.driver.page_source
+      websiteSoup = BeautifulSoup(websitepage, 'html.parser')
+      new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
+      only_valid = set()
+      for em in new_emails:
+        if validate_email(em):
+            only_valid.add(em)
+            print(em)
+      self.no_email = False
+      self.internal_emails.update(only_valid)
+      self.get_internal_links(websiteSoup, self.website_link.text.replace("http://", "").replace("https://", "").split("/")[0])
+      self.internal_links.clear()
 
-        for li in lilist:
-          # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
-          link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
-          if link == None:
-              continue
-          self.driver.get(f"https://www.yelp.com/{link['href']}")
-          profile = self.driver.page_source
-          profile_soup = BeautifulSoup(profile, 'html.parser')
-          self.website_link = None
-          business_website = profile_soup.find("p", string="Business website")
-          if business_website != None:
-            business_website_P = business_website.findNext('p')
-            if business_website_P != None:
-              business_website_a = business_website_P.find('a')
-              if business_website_a != None:
-                self.website_link = business_website_a
-          if self.website_link == None:
-              print(f"Link Not Found ----> https://www.yelp.com/{link['href']}")
-              continue
-          print(self.website_link.text)
-          try:
-              self.driver.get("http://" + self.website_link.text)
-          except:
-              print("error occurred")
-              continue
-          business_name = link.text
-          site_url = "http://" + self.website_link.text
-          websitepage = self.driver.page_source
-          websiteSoup = BeautifulSoup(websitepage, 'html.parser')
-          new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
-          self.no_email = False
-          self.internal_emails.update(new_emails)
-          self.get_internal_links(websiteSoup, self.website_link.text.replace("http://", "").replace("https://", "").split("/")[0])
-          self.internal_links.clear()
+      if len(self.internal_emails) == 0:
+          data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": " ","cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
+      else:
+          data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": repr(self.internal_emails), "cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
 
-          if len(self.internal_emails) == 0:
-              data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": " ","cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
-          else:
-              data_dict = {"business_name": business_name,"site_url": site_url,"EmailAddress": repr(self.internal_emails), "cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
+      self.all_emails.add(repr(data_dict))
 
-          self.all_emails.add(repr(data_dict))
-
-          self.internal_emails.clear()
-
-            # catch block
-      except AttributeError:
-        self.flag += 1
-        print(f"trial:{self.flag}")
+      self.internal_emails.clear()
       
     return self.all_emails  
 
   def start_database(self):
-    client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_akash?retryWrites=true&w=majority')
+    client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
     db = client['codemarket_devasish']
     print("Connection Created")
     collection = db['yelpscrapermailinglist']
@@ -165,7 +174,7 @@ class Scrapper():
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument('user',type=str,nargs='?',default='123',help='Enter userid')
+  parser.add_argument('user',type=str,nargs='?',default='devasish',help='Enter userid')
   parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
   parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Therapist'),help='Enter keyword')
   parser.add_argument('loc',type=str,nargs='?',default=urllib.parse.quote_plus('Los Angeles, CA'),help='Enter city')
