@@ -37,7 +37,6 @@ def lambda_handler(event, context):
                     'created timestamp': '',
                     'collection of email scraped':''
                 }
-        
         collection.insert_one(document)
 
     #encoding parameters
@@ -45,8 +44,8 @@ def lambda_handler(event, context):
     loc = urllib.parse.quote_plus(loc)
     
     #vairable definition
-    cluster = 'yelpscraper'
-    task_definition = 'yelpscraper:12'
+    cluster = 'devasish-yelp'
+    task_definition = 'devasish_yelp:14'
     overrides = {"containerOverrides": [{'name':'docker_ec2','command':[keyword,loc,limit]} ] }
    
     #running fargate task

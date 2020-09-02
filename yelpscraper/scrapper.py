@@ -32,7 +32,7 @@ class Scrapper():
     self.driver = webdriver.Chrome('/usr/local/bin/chromedriver', chrome_options=chrome_options)
     
   def scrap(self):
-    for start in range(0, self.limit *10 + 1, 10):
+    for start in range(0, self.limit *10, 10):
       url = self.get_url(start)    
       # url = f'https://www.yelp.com/search?find_desc=Therapist&find_loc=Los+Angeles%2C+CA&ns=1&start={start}'
       print(f'page:{start}')
@@ -91,7 +91,7 @@ class Scrapper():
     page_link_modefied = soup.find_all('a',class_="lemon--a__373c0__IEZFH link__373c0__1G70M pagination-link-component__373c0__9aHoC link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE")
     bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
         # added loop to try loading webpage
-    while self.flag < 50 and self.no_email:
+    while self.no_email and self.flag < 50:
       try:
         lilist = bussiness_list.findChildren(['li'])
 
@@ -176,5 +176,5 @@ if __name__ == "__main__":
   loc = args.loc
   limit = args.limit
   
-  scrapper = Scrapper(user_id, name, limit, loc, keyword)
+  scrapper = Scrapper(user_id, name, limit, keyword, loc)
   scrapper.scrap()
