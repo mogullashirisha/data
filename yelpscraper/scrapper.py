@@ -125,6 +125,7 @@ class Scrapper():
           websitepage = self.driver.page_source
           websiteSoup = BeautifulSoup(websitepage, 'html.parser')
           new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
+          self.no_email = False
           self.internal_emails.update(new_emails)
           self.get_internal_links(websiteSoup, self.website_link.text.replace("http://", "").replace("https://", "").split("/")[0])
           self.internal_links.clear()
