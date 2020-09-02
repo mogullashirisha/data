@@ -45,7 +45,7 @@ def lambda_handler(event, context):
     
     #vairable definition
     cluster = 'devasish-yelp'
-    task_definition = 'devasish_yelp:14'
+    task_definition = 'devasish_yelp:16'
     overrides = {"containerOverrides": [{'name':'docker_ec2','command':[keyword,loc,limit]} ] }
    
     #running fargate task

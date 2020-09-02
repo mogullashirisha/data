@@ -149,6 +149,7 @@ class Scrapper():
   def start_database(self):
     client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_akash?retryWrites=true&w=majority')
     db = client['codemarket_akash']
+    print("Connection Created")
     collection = db['yelpscrapermailinglist']
     return collection
 
@@ -179,3 +180,4 @@ if __name__ == "__main__":
   
   scrapper = Scrapper(user_id, name, limit, keyword, loc)
   scrapper.scrap()
+  scrapper.store_emails()
