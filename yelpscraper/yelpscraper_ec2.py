@@ -25,7 +25,7 @@ class Scraper:
         self.AllInternalEmails = set()
         self.final_result = set()
         self.counter = 0
-        
+        self.collection = self.start_database()
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -64,8 +64,6 @@ class Scraper:
                     self.getInternalLinks(websitepage_soup,includeurl)
         return (internalLinks)
 
-
-
     def splitaddress(self,address):
         return (address.replace("http://", "").replace("https://", "").split("/"))
 
@@ -94,19 +92,19 @@ class Scraper:
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
-            driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+            # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+            driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
             try:
                 for start in range(0, self.limit, 10):
                     url = self.get_url(start)
-                    print(url)
+                    # print(url)
                     driver.get(url)
                     html = driver.page_source
                     soup = BeautifulSoup(html, 'html.parser')
                     bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
                     lilist = bussiness_list.findChildren(['li'])
                     for li in lilist:
-                        # status = f'Scraping website-{self.counter + 1}'
+                        status = f'Scraping website-{self.counter + 1}'
                         # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
                         link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
                         if link == None:
@@ -161,25 +159,24 @@ class Scraper:
                         self.counter += 1
 
                         if self.counter == self.limit:
-                        #     status = 'Scraping Completed'
-                        #     self.store_emails(status)
+                            status = 'Scraping Completed'
+                            self.store_emails(status)
                             break
                         
-                        # self.store_emails(status)
+                        self.store_emails(status)
                 break
 
             except AttributeError:
                 self.flag += 1
                 print(f"trial:{self.flag}")
-
         print('End Scraping')
 
+    def store_emails(self, status):
         print('Updating Database')
-        collection = self.start_database()
         email_collection = repr(self.final_result)
         query = {'user_id':self.userid,'name':self.name}
         newvalues = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': 'Scraping Completed' } }
-        collection.update_one(query,newvalues)
+        self.collection.update_one(query,newvalues)
         print('Database Updated')
 
 if __name__ == '__main__':
@@ -188,7 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
     parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Therapist'),help='Enter keyword')
     parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Los Angeles, CA'),help='Enter city')
-    parser.add_argument('limit',type=int,nargs='?',default=5,help='Enter limit')
+    parser.add_argument('limit',type=int,nargs='?',default=1,help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
