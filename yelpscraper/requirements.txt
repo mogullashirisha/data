@@ -1,4 +1,4 @@
-
+py3_validate_email
 requests==2.20.0
 bs4
 pandas==0.24.2
