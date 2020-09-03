@@ -1,8 +1,8 @@
-requests==2.9.1
+
+requests==2.20.0
 bs4
 pandas==0.24.2
 selenium==3.141.0
 pymongo==3.10.1
 dnspython
 argparse
-py3-validate-email 

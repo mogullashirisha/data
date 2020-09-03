@@ -7,11 +7,12 @@ def lambda_handler(event, context):
     # TODO implement
 
     #reading parameters
-    user_id = event["queryStringParameters"]["user"]
+    userid = event["queryStringParameters"]["user_id"]
     name = event["queryStringParameters"]["name"]
     keyword = event["queryStringParameters"]["keyword"]
-    loc = event["queryStringParameters"]["loc"]
+    city = event["queryStringParameters"]["city"]
     limit = event["queryStringParameters"]["limit"]
+    
     
     #mongo
     db = 'codemarket_devasish'
@@ -20,33 +21,37 @@ def lambda_handler(event, context):
     collection = database['yelpscrapermailinglist']
     
     status = 'Scraping Started'
-    query = {'user_id':user_id,'name':name}
+    query = {'user_id':userid,'name':name}
     document = collection.find_one(query)
     
     if document:
         newvalues = {"$set":{"status":status}}
         collection.update_one(query,newvalues)
     else:
-        document = {'user_id':user_id,
+        document = {'user_id':userid,
                     'name': name,
                     'keyword':keyword,
-                    'loc':loc,
+                    'city':city,
                     'limit': limit,
                     'status': status,
                     'created by':'UI',
                     'created timestamp': '',
                     'collection of email scraped':''
                 }
+        
         collection.insert_one(document)
 
+    
+    
     #encoding parameters
     keyword = urllib.parse.quote_plus(keyword)
-    loc = urllib.parse.quote_plus(loc)
+    city = urllib.parse.quote_plus(city)
+    
     
     #vairable definition
-    cluster = 'devasish-yelp'
-    task_definition = 'devasish_yelp:18'
-    overrides = {"containerOverrides": [{'name':'docker_ec2','command':[user_id,name,keyword,loc,limit]} ] }
+    cluster = 'yelpscraper'
+    task_definition = 'yelpscraper:12'
+    overrides = {"containerOverrides": [{'name':'docker_ec2','command':[userid,name,keyword,city,limit]} ] }
    
     #running fargate task
     result = boto3.client('ecs').run_task(
@@ -72,3 +77,5 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': json.dumps(status)
     }
+  
+

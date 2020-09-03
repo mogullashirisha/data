@@ -16,18 +16,14 @@ RUN unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 RUN which chromedriver
 RUN /usr/local/bin/chromedriver --version
 
-# set display port to avoid crash 
-ENV DISPLAY=:100
+# set display port to avoid crash
+ENV DISPLAY=:99 
 
-# Install requirements first so this step is cached by Dockern
+# Install requirements first so this step is cached by Docker
 COPY /requirements.txt /home/ubuntu/data/yelpscraper/requirements.txt
+COPY /yelpscraper_ec2.py  /home/ubuntu/data/yelpscraper/yelpscraper_ec2.py
 WORKDIR /home/ubuntu/data/yelpscraper
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# copy code
-COPY /scrapper.py  /home/ubuntu/data/yelpscraper/scrapper.py
-COPY /sym_data.py  /home/ubuntu/data/yelpscraper/sym_data.py
-COPY /symbols.tsv  /home/ubuntu/data/yelpscraper/symbols.tsv
-
-ENTRYPOINT ["python","scrapper.py"]
+ENTRYPOINT ["python","yelpscraper_ec2.py"]
