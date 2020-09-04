@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     
     
     #mongo
-    db = 'codemarket_devasish'
+    db = 'codemarket_akash'
     client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote('sumi@')+'123@codemarket-staging.k16z7.mongodb.net/'+db+'?retryWrites=true&w=majority')
     database = client[db]
     collection = database['yelpscrapermailinglist']
