@@ -115,6 +115,8 @@ class Scraper:
                         profile = driver.page_source
                         profile_soup = BeautifulSoup(profile, 'html.parser')
                         websitelink = None
+                        business_name = profile_soup.find('h1',class_ = "lemon--h1__373c0__2ZHSL heading--h1__373c0___56D3 undefined heading--inline__373c0__1jeAh").text
+                        print(business_name)
                         if profile_soup.find("p", string="Business website") != None:
                             if profile_soup.find("p", string="Business website").findNext('p') != None:
                                 if profile_soup.find("p", string="Business website").findNext('p').find('a') != None:
@@ -123,14 +125,12 @@ class Scraper:
                             print("Link Not Found")
                             print("https://www.yelp.com/" + link['href'])
                             continue
-                        print(websitelink.text)
                         try:
                             driver.get("http://"+websitelink.text)
                         except:
                             print("An exception occurred")
                             continue
                         time.sleep(10)
-                        business_name = link.text
                         site_url = "http://"+websitelink.text
                         if site_url == "http://libertytax.com/":
                             continue
@@ -151,7 +151,7 @@ class Scraper:
                         if len(self.AllInternalEmails) == 0:
                             data_dict = {"business_name": business_name,"site_url": site_url,"Emails": " "}#,"cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
                         else:
-                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": self.AllInternalEmails,"cleaned email":" "}#,"cleaned_by":" ","cleaned_timestamp":" "}
+                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": self.AllInternalEmails }#,"cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
                  
                         self.final_result.add(repr(data_dict))
                 
@@ -175,7 +175,7 @@ class Scraper:
         print('Updating Database')
         email_collection = repr(self.final_result)
         query = {'user_id':self.userid,'name':self.name}
-        newvalues = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': status } }
+        newvalues = { "$set": {'limit':self.limit, 'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': status } }
         self.collection.update_one(query,newvalues)
         print('Database Updated')
 
