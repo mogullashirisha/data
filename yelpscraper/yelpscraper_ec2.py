@@ -92,8 +92,8 @@ class Scraper:
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
-            driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+            # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+            driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
             try:
                 for start in range(0, self.limit, 10):
                     url = self.get_url(start)
@@ -149,9 +149,9 @@ class Scraper:
                         self.AllInternalLinks.clear()
 
                         if len(self.AllInternalEmails) == 0:
-                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": " ","cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
+                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": " "}#,"cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
                         else:
-                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": self.AllInternalEmails,"cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
+                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": self.AllInternalEmails,"cleaned email":" "}#,"cleaned_by":" ","cleaned_timestamp":" "}
                  
                         self.final_result.add(repr(data_dict))
                 
@@ -175,7 +175,7 @@ class Scraper:
         print('Updating Database')
         email_collection = repr(self.final_result)
         query = {'user_id':self.userid,'name':self.name}
-        newvalues = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': 'Scraping Completed' } }
+        newvalues = { "$set": {'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': status } }
         self.collection.update_one(query,newvalues)
         print('Database Updated')
 
