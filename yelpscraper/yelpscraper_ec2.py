@@ -185,7 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
     parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Therapist'),help='Enter keyword')
     parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Los Angeles, CA'),help='Enter city')
-    parser.add_argument('limit',type=int,nargs='?',default=1,help='Enter limit')
+    parser.add_argument('limit',type=int,nargs='?',default=15,help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
