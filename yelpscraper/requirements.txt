@@ -1,5 +1,5 @@
 
-requests==2.20.0
+requests
 bs4
 pandas==0.24.2
 selenium==3.141.0
