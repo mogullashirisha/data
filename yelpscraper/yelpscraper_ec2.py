@@ -92,8 +92,8 @@ class Scraper:
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
-            # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+            driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
             try:
                 for start in range(0, self.limit, 10):
                     url = self.get_url(start)
