@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     
     
     #mongo
-    db = 'codemarket_akash'
+    db = 'codemarket_devasish'
     client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote('sumi@')+'123@codemarket-staging.k16z7.mongodb.net/'+db+'?retryWrites=true&w=majority')
     database = client[db]
     collection = database['yelpscrapermailinglist']
@@ -49,9 +49,9 @@ def lambda_handler(event, context):
     
     
     #vairable definition
-    cluster = 'devasish_yelp'
-    task_definition = 'devasish_yelp:25'
-    overrides = {"containerOverrides": [{'name':'devasish_yelp','command':[userid,name,keyword,city,limit]} ] }
+    cluster = 'yelpscraper'
+    task_definition = 'yelpscraper:12'
+    overrides = {"containerOverrides": [{'name':'docker_ec2','command':[userid,name,keyword,city,limit]} ] }
    
     #running fargate task
     result = boto3.client('ecs').run_task(
