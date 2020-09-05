@@ -1,0 +1,5 @@
+image uri: 784380094623.dkr.ecr.us-east-2.amazonaws.com/aryman_yelpscraper_v2:latest
+
+CIDR block: 10.0.0.0/16
+subnet 1: 10.0.0.0/24
+subnet 2: 10.0.1.0/24
