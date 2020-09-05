@@ -22,9 +22,7 @@ ENV DISPLAY=:99
 # Install requirements first so this step is cached by Docker
 COPY /requirements.txt /home/ubuntu/data/manhattanBeach_scraper/requirements.txt
 COPY /yelpscraper_ec2.py  /home/ubuntu/data/manhattanBeach_scraper/scraper_ec2.py
-COPY /symbols.tsv  /home/ubuntu/data/manhattanBeach_scraper/symbols.tsv
-COPY /sym_data.py  /home/ubuntu/data/manhattanBeach_scraper/sym_data.py
-WORKDIR /home/ubuntu/data/yelpscraper
+WORKDIR /home/ubuntu/data/manhattanBeach_scraper
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
