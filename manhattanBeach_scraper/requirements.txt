@@ -3,6 +3,6 @@ bs4
 pandas==0.24.2
 selenium==3.141.0
 pymongo==3.10.1
-dnspython=1.16
+dnspython
 argparse
 py3_validate_email
