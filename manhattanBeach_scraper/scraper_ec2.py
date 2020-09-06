@@ -99,6 +99,8 @@ class Scraper:
         for li in lilist:
             cate = li.findChildren(['a'])
             self.scrape_category(cate[0])
+            if self.counter == self.limit:
+                break
 
     def scrape_category(self, cate):
         category = cate.text
