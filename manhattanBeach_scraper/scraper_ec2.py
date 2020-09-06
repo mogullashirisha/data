@@ -87,8 +87,8 @@ class Scraper:
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument('--disable-dev-shm-usage')        
-        # self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-        self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+        self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+        # self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
         url = "https://business.manhattanbeachchamber.com/members"
         # print(url)
         self.driver.get(url)
