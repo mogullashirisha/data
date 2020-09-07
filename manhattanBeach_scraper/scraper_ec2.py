@@ -138,6 +138,7 @@ class Scraper:
                     self.AllEmails[em] += 1
                 except KeyError:
                     if validate_email(em):
+                        self.email_counter += 1
                         only_valid.add(em)
                     self.AllEmails[em] = 1
             if len(only_valid) > 0:
