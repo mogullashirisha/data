@@ -126,36 +126,42 @@ class Scraper:
             profile = self.driver.page_source
             profile_soup = BeautifulSoup(profile, 'html.parser')
             website = profile_soup.find('a', itemprop = "url")
-            websitelink = website['href']
+            try:
+                websitelink = website['href']
             
-            self.driver.get(websitelink)
-            websitepage = self.driver.page_source
-            websiteSoup = BeautifulSoup(websitepage, 'html.parser')
-            new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
-            only_valid = set()
-            for em in new_emails:
-                try:
-                    self.AllEmails[em] += 1
-                except KeyError:
-                    if validate_email(em):
-                        self.email_counter += 1
-                        only_valid.add(em)
-                    self.AllEmails[em] = 1
-            if len(only_valid) > 0:
-                print("------VALID EMAIL SET------")
-                print(only_valid)
-            self.AllInternalEmails.update(only_valid)
-            self.getInternalLinks(websiteSoup, self.splitaddress(websitelink)[0])
-            self.AllInternalLinks.clear()
+                self.driver.get(websitelink)
+                websitepage = self.driver.page_source
+                websiteSoup = BeautifulSoup(websitepage, 'html.parser')
+                new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
+                only_valid = set()
+                for em in new_emails:
+                    try:
+                        self.AllEmails[em] += 1
+                    except KeyError:
+                        if validate_email(em):
+                            self.email_counter += 1
+                            only_valid.add(em)
+                        self.AllEmails[em] = 1
+                if len(only_valid) > 0:
+                    print("------VALID EMAIL SET------")
+                    print(only_valid)
+                self.AllInternalEmails.update(only_valid)
+                self.getInternalLinks(websiteSoup, self.splitaddress(websitelink)[0])
+                self.AllInternalLinks.clear()
 
-            if len(self.AllInternalEmails) == 0:
-                data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": " "}
-            else:
-                data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": self.AllInternalEmails }
+                if len(self.AllInternalEmails) == 0:
+                    data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": " "}
+                else:
+                    data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": self.AllInternalEmails }
+            
+                self.final_result.add(repr(data_dict))
         
-            self.final_result.add(repr(data_dict))
-    
-            self.AllInternalEmails.clear()
+                self.AllInternalEmails.clear()
+            
+            except:
+                print("Website Not Available")
+                continue
+
             self.counter += 1
 
             self.store_emails(status)

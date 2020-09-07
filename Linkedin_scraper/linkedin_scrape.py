@@ -43,20 +43,20 @@ db = client.get_database('codemarket_devasish')
 collection = db['LinkedIn']
 
 ####### Use Below code when having chrome driver and chrome installed on env
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument('--disable-dev-shm-usage')
-driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-# driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+# chrome_options = Options()
+# chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--no-sandbox")
+# chrome_options.add_argument("--disable-gpu")
+# chrome_options.add_argument('--disable-dev-shm-usage')
+# driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
 
 driver.get(url)
 print("linkedin opened")
 # Implicit Wait Command
 driver.implicitly_wait(10)
 # Explicit Wait command
-wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 50)
 # Getting main window handle for controlling active window
 main_handle = driver.current_window_handle
 
@@ -125,8 +125,8 @@ session.sendmail(sender_address, receiver_address, text)
 session.quit()
 print('scraping started, email sent to user')
 
-# Click My Network 
-my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//li[@id='mynetwork-nav-item']")))
+# Click My Network mynetwork-nav-item
+my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@id='ember23']")))
 print("On my network page")
 my_network.click()
 
@@ -148,14 +148,14 @@ sub_handle = driver.current_window_handle
 driver.switch_to.window(main_handle)
 
 # Get Connections list and loop over each connection and get its name, company name, email and save to csv file
-# for i in range (40, total_connections + 1):
+# for i in range (40, total_connections + 1): list-style-none
 for i in range (1, 5):
     print(i)
-    connections = driver.find_elements(By.XPATH, "//li[@class='list-style-none']")
+    connections = driver.find_elements(By.XPATH, "//a[@class='mn-connection-card artdeco-list ember-view']")
     
     # Trying to see if the index is in current list, if not use javascript to scroll page and expand connections list
     try :
-        connection = driver.find_element(By.XPATH, "//li[@class='list-style-none'][{}]/div/a".format(i))
+        connection = driver.find_element(By.XPATH, "//li[@class='mn-connection-card artdeco-list ember-view'][{}]/div/a".format(i))
     except:
         print("page scroll exception")
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
@@ -165,7 +165,7 @@ for i in range (1, 5):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight)")
         time.sleep(2)
 
-    connection = driver.find_element(By.XPATH, "//li[@class='list-style-none'][{}]/div/a".format(i))
+    connection = driver.find_element(By.XPATH, "//li[@class='mn-connection-card artdeco-list ember-view'][{}]/div/a".format(i))
     link = connection.get_attribute('href')
 
     driver.switch_to.window(sub_handle)
@@ -215,13 +215,14 @@ for i in range (1, 5):
 
 
 # Click on My Profile Button
-myprofile = wait.until(EC.visibility_of_element_located((By.XPATH, "//li[@id='profile-nav-item']")))
+# myprofile = wait.until(EC.visibility_of_element_located((By.XPATH, "//li[@id='profile-nav-item']")))
+myprofile = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@id='ember36']")))
 myprofile.click()
 
 # Click Sign Out
-signout = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[text()='Sign out']")))
-signout.click()
-print("Signed out")
+# signout = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[text()='Sign out']")))
+# signout.click()
+# print("Signed out")
 
 # if otp page not opened and login successful, send an email to user
 mail_content_done = '''Hello,
