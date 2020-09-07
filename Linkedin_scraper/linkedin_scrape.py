@@ -220,9 +220,9 @@ myprofile = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@id
 myprofile.click()
 
 # Click Sign Out
-# signout = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[text()='Sign out']")))
-# signout.click()
-# print("Signed out")
+signout = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[text()='Sign out']")))
+signout.click()
+print("Signed out")
 
 # if otp page not opened and login successful, send an email to user
 mail_content_done = '''Hello,
