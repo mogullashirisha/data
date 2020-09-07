@@ -13,17 +13,18 @@ from sys import stdout
 from validate_email import validate_email
 
 class Scraper:
-    def __init__(self,userid,name,limit):
+    def __init__(self,userid,name):#,limit):
         self.userid = userid
         self.name = name
-        self.limit = limit
-        self.counter = 0
+        # self.limit = limit
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
         self.AllEmails = {}
         self.final_result = set()
-        self.counter = 0
         self.collection = self.start_database()
+        self.counter = 0
+        self.email_counter = 0
+        self.website_scrapped = {}
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -58,6 +59,7 @@ class Scraper:
                             self.AllEmails[em] += 1
                         except KeyError:
                             if validate_email(em):
+                                self.email_counter += 1
                                 only_valid.add(em)
                             self.AllEmails[em] = 1
                     if len(only_valid) > 0:
@@ -86,7 +88,7 @@ class Scraper:
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument('--disable-dev-shm-usage')        
+        chrome_options.add_argument('--disable-dev-shm-usage')
         self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
         # self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
         url = "https://business.manhattanbeachchamber.com/members"
@@ -99,8 +101,10 @@ class Scraper:
         for li in lilist:
             cate = li.findChildren(['a'])
             self.scrape_category(cate[0])
-            if self.counter == self.limit:
-                break
+        status = "Scraping Completed"
+        print(status)
+        print(self.website_scrapped)
+        self.store_emails(status)
 
     def scrape_category(self, cate):
         category = cate.text
@@ -109,6 +113,7 @@ class Scraper:
         html = self.driver.page_source
         soup = BeautifulSoup(html, 'html.parser')
         business_list = soup.findAll('div',class_="card-header")
+        self.website_scrapped[category] = len(business_list)
         for li in business_list:
             business = li.find('a')
             business_name = business['alt']
@@ -150,21 +155,15 @@ class Scraper:
             self.final_result.add(repr(data_dict))
     
             self.AllInternalEmails.clear()
-
             self.counter += 1
 
-            if self.counter == self.limit:
-                status = 'Scraping Completed'
-                self.store_emails(status)
-                break
-            
             self.store_emails(status)
 
     def store_emails(self, status):
         print('Updating Database')
         email_collection = repr(self.final_result)
         query = {'user_id':self.userid,'name':self.name}
-        newvalues = { "$set": {'limit':self.limit, 'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': status } }
+        newvalues = { "$set": {'emails_scraped':self.email_counter, 'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': status } }
         self.collection.update_one(query,newvalues)
         print('Database Updated')
 
@@ -172,13 +171,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('user_id',type=str,nargs='?',default='devasish',help='Enter userid')
     parser.add_argument('name',type=str,nargs='?',default='manhattanbeach_scraper',help='Enter name')
-    parser.add_argument('limit',type=int,nargs='?',default=2,help='Enter limit')
+    # parser.add_argument('limit',type=int,nargs='?',default=2,help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
     name = args.name
-    limit = args.limit
-    print(userid,name,limit)
+    # limit = args.limit
+    print(userid,name)#,limit)
 
-    scraper_obj = Scraper(userid,name,limit)
+    scraper_obj = Scraper(userid,name)#,limit)
     scraper_obj.scrape()
