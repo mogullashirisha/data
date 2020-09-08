@@ -114,6 +114,7 @@ class Scraper:
             for li in lilist:
                 cate = li.findChildren(['a'])
                 status = f'Scraping website'
+                MB_scraper.objects(id = target).update(set__status = status )
                 category = cate[0].text
                 if category != self.category:
                     continue
@@ -170,12 +171,13 @@ class Scraper:
                         self.AllInternalEmails.clear()
                         
                         MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
+                        MB_scraper.objects(id = target).update(set__email_counter = self.email_counter )
                     
                     except:
                         print("Website Not Available")
                         continue
-
-                    self.counter += 1
+            
+            MB_scraper.objects(id = target).update(set__status = "Scraping Completed")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -47,5 +47,6 @@ with switch_collection(MB_scraper, 'manhattanBeach_scraper') as MB_scraper:
   # scraper1.email_counter = 1
   target = "5f57a3f6b011042085c43c57"
   new_web = web1
-  MB_scraper.objects(id = target).update(push__collection_of_email_scraped = web1)
+  # MB_scraper.objects(id = target).update(push__collection_of_email_scraped = web1)
+  MB_scraper.objects(id = target).update(set__email_counter = 1 )
   # scraper1.save()
