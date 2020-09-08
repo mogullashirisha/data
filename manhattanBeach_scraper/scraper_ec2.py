@@ -161,7 +161,7 @@ class Scraper:
                     self.AllInternalLinks.clear()
 
                     if len(self.AllInternalEmails) == 0:
-                        data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": " "}
+                        data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": []}
                     else:
                         data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": list(self.AllInternalEmails) }
                 
