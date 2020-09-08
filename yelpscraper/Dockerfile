@@ -20,12 +20,13 @@ RUN /usr/local/bin/chromedriver --version
 ENV DISPLAY=:99
 
 # Install requirements first so this step is cached by Docker
-COPY requirements.txt c:/Users/Admin/Desktop/technical_round/data/yelpscraper/requirements.txt
-WORKDIR c:/Users/Admin/Desktop/technical_round/data/yelpscraper
+COPY requirements.txt c:/Users/Admin/Desktop/my_version_yelp/yelpscraper/requirements.txt
+WORKDIR c:/Users/Admin/Desktop/my_version_yelp/yelpscraper
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # copy code
+COPY database_code.py database_code.py
 COPY yelpscraper_ec2.py yelpscraper_ec2.py
 #RUN python yelpscraper_ec2.py
 ENTRYPOINT ["python","yelpscraper_ec2.py"]

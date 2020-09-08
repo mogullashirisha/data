@@ -20,14 +20,14 @@ RUN /usr/local/bin/chromedriver --version
 ENV DISPLAY=:99
 
 # Install requirements first so this step is cached by Docker
-COPY requirements.txt c:/Users/Admin/Desktop/my_version_yelp/yelpscraper/requirements.txt
-WORKDIR c:/Users/Admin/Desktop/my_version_yelp/yelpscraper
+COPY requirements.txt d:/CODEMARKET/instagram/requirements.txt
+WORKDIR d:/CODEMARKET/instagram
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # copy code
-COPY database_code.py database_code.py
-COPY yelpscraper_ec2.py yelpscraper_ec2.py
-#RUN python yelpscraper_ec2.py
-ENTRYPOINT ["python","yelpscraper_ec2.py"]
+COPY database_insta.py database_insta.py
+COPY insta_scrape.py insta_scrape.py
+#RUN python insta_scrape.py
+ENTRYPOINT ["python","insta_scrape.py"]
 
