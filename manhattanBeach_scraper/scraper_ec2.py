@@ -136,47 +136,46 @@ class Scraper:
                     website = profile_soup.find('a', itemprop = "url")
                     try:
                         websitelink = website['href']
-                    
-                        self.driver.get(websitelink)
-                        websitepage = self.driver.page_source
-                        websiteSoup = BeautifulSoup(websitepage, 'html.parser')
-                        new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
-                        only_valid = set()
-                        for em in new_emails:
-                            try:
-                                self.AllEmails[em] += 1
-                            except KeyError:
-                                if validate_email(em):
-                                    self.email_counter += 1
-                                    only_valid.add(em)
-                                self.AllEmails[em] = 1
-                        if len(only_valid) > 0:
-                            print("------VALID EMAIL SET------")
-                            print(only_valid)
-                        self.AllInternalEmails.update(only_valid)
-                        self.getInternalLinks(websiteSoup, self.splitaddress(websitelink)[0])
-                        self.AllInternalLinks.clear()
-
-                        if len(self.AllInternalEmails) == 0:
-                            data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": " "}
-                        else:
-                            data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": list(self.AllInternalEmails) }
-                    
-                        website_object = Website()
-                        website_object.business_name = data_dict["business_name"]
-                        website_object.website_link = data_dict["site_url"]
-                        website_object.category = data_dict["Category"]
-                        website_object.emails = data_dict["Emails"]
-                
-                        self.AllInternalEmails.clear()
-                        
-                        MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
-                        MB_scraper.objects(id = self.id).update(set__email_counter = self.email_counter )
-                    
                     except:
-                        print("Website Not Available")
+                        print(f"{business_name}-->Website Not Available")
                         continue
+
+                    self.driver.get(websitelink)
+                    websitepage = self.driver.page_source
+                    websiteSoup = BeautifulSoup(websitepage, 'html.parser')
+                    new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
+                    only_valid = set()
+                    for em in new_emails:
+                        try:
+                            self.AllEmails[em] += 1
+                        except KeyError:
+                            if validate_email(em):
+                                self.email_counter += 1
+                                only_valid.add(em)
+                            self.AllEmails[em] = 1
+                    if len(only_valid) > 0:
+                        print("------VALID EMAIL SET------")
+                        print(only_valid)
+                    self.AllInternalEmails.update(only_valid)
+                    self.getInternalLinks(websiteSoup, self.splitaddress(websitelink)[0])
+                    self.AllInternalLinks.clear()
+
+                    if len(self.AllInternalEmails) == 0:
+                        data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": " "}
+                    else:
+                        data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": list(self.AllInternalEmails) }
+                
+                    website_object = Website()
+                    website_object.business_name = data_dict["business_name"]
+                    website_object.website_link = data_dict["site_url"]
+                    website_object.category = data_dict["Category"]
+                    website_object.emails = data_dict["Emails"]
             
+                    self.AllInternalEmails.clear()
+                    
+                    MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
+                    MB_scraper.objects(id = self.id).update(set__email_counter = self.email_counter )
+        
             MB_scraper.objects(id = self.id).update(set__status = "Scraping Completed")
 
 if __name__ == '__main__':
