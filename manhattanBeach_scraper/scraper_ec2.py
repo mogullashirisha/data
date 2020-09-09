@@ -40,6 +40,7 @@ class Scraper:
         self.AllEmails = {}
         self.final_result = set()
         self.counter = 0
+        self.email_counter = 0
         self.website_scrapped = {}
 
     def getInternalLinks(self,bsobj, includeurl):
@@ -75,9 +76,9 @@ class Scraper:
                             self.AllEmails[em] += 1
                         except KeyError:
                             if validate_email(em):
-                                self.email_counter += 1
                                 only_valid.add(em)
                             self.AllEmails[em] = 1
+                    self.email_counter += len(only_valid)
                     if len(only_valid) > 0:
                         print("------VALID EMAIL SET------")
                         print(only_valid)
@@ -124,6 +125,7 @@ class Scraper:
                 business_list = soup.findAll('div',class_="card-header")
                 self.website_scrapped[category] = len(business_list)
                 for li in business_list:
+                    self.email_counter = 0
                     business = li.find('a')
                     business_name = business['alt']
                     print(business_name)
@@ -151,8 +153,8 @@ class Scraper:
                             if validate_email(em):
                                 only_valid.add(em)
                             self.AllEmails[em] = 1
-                    email_counter = len(only_valid)
-                    if email_counter > 0:
+                    self.email_counter += len(only_valid)
+                    if len(only_valid) > 0:
                         print("------VALID EMAIL SET------")
                         print(only_valid)
                     self.AllInternalEmails.update(only_valid)
@@ -173,7 +175,7 @@ class Scraper:
                     self.AllInternalEmails.clear()
                     
                     MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
-                    MB_scraper.objects(id = self.id).update(inc__email_counter = email_counter)
+                    MB_scraper.objects(id = self.id).update(inc__email_counter = self.email_counter)
                     MB_scraper.objects(id = self.id).update(set__last_updated = datetime.datetime.now())
         
             MB_scraper.objects(id = self.id).update(set__status = "Scraping Completed")
