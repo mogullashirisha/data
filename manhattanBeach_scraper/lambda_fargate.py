@@ -9,16 +9,14 @@ def lambda_handler(event, context):
     #reading parameters
     userid = event["queryStringParameters"]["user_id"]
     name = event["queryStringParameters"]["name"]
-    keyword = event["queryStringParameters"]["keyword"]
-    city = event["queryStringParameters"]["city"]
-    limit = event["queryStringParameters"]["limit"]
+    category = event["queryStringParameters"]["category"]
     
     
     #mongo
     db = 'codemarket_devasish'
     client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote('sumi@')+'123@codemarket-staging.k16z7.mongodb.net/'+db+'?retryWrites=true&w=majority')
     database = client[db]
-    collection = database['yelpscrapermailinglist']
+    collection = database['manhattanBeach_scraper']
     
     status = 'Scraping Started'
     query = {'user_id':userid,'name':name}
@@ -27,12 +25,10 @@ def lambda_handler(event, context):
     if document:
         newvalues = {"$set":{"status":status}}
         collection.update_one(query,newvalues)
+        id = document.get("_id")
     else:
         document = {'user_id':userid,
                     'name': name,
-                    'keyword':keyword,
-                    'city':city,
-                    'limit': limit,
                     'status': status,
                     'created by':'UI',
                     'created timestamp': '',
@@ -40,24 +36,25 @@ def lambda_handler(event, context):
                 }
         
         collection.insert_one(document)
+        document = collection.find_one(query)
+        id = document.get("_id")
 
     
     
     #encoding parameters
-    keyword = urllib.parse.quote_plus(keyword)
-    city = urllib.parse.quote_plus(city)
+    category = urllib.parse.quote_plus(category)
     
     
     #vairable definition
     cluster = 'devasish_yelp'
-    task_definition = 'devasish_yelp:31'
-    overrides = {"containerOverrides": [{'name':'devasish_yelp','command':[userid,name,keyword,city,limit]} ] }
+    task_definition = 'devasish_mb_commerce_chamber:22'
+    overrides = {"containerOverrides": [{'name':'devasish_mb_commerce_chamber','command':[userid, name, id, category]} ] }
    
     #running fargate task
     result = boto3.client('ecs').run_task(
-    cluster=cluster,
-    taskDefinition=task_definition,
-    overrides=overrides,
+    cluster = cluster,
+    taskDefinition = task_definition,
+    overrides = overrides,
     launchType = 'FARGATE',
     platformVersion='LATEST',
     networkConfiguration={
