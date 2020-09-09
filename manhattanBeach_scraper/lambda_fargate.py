@@ -47,7 +47,7 @@ def lambda_handler(event, context):
     
     #vairable definition
     cluster = 'devasish_yelp'
-    task_definition = 'devasish_mb_commerce_chamber:22'
+    task_definition = 'devasish_mb_commerce_chamber:31'
     overrides = {"containerOverrides": [{'name':'devasish_mb_commerce_chamber','command':[userid, name, id, category]} ] }
    
     #running fargate task
