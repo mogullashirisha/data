@@ -26,7 +26,7 @@ class MB_scraper(Document):
     name = StringField(max_length=120, required=True)
     status = StringField(max_length=120)
     email_counter = IntField()
-    created_timestamp = DateTimeField()
+    last_updated = DateTimeField()
     collection_of_email_scraped = ListField(EmbeddedDocumentField(Website))
 
 class Scraper:
@@ -174,16 +174,17 @@ class Scraper:
                     self.AllInternalEmails.clear()
                     
                     MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
-                    MB_scraper.objects(id = self.id).update(inc__email_counter = 1)
+                    MB_scraper.objects(id = self.id).update(inc__email_counter = self.email_counter)
+                    MB_scraper.objects(id = self.id).update(set__last_updated = datetime.datetime.now())
         
             MB_scraper.objects(id = self.id).update(set__status = "Scraping Completed")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('user_id',type=str,nargs='?',default='devasish',help='Enter userid')
-    parser.add_argument('name',type=str,nargs='?',default='manhattanbeach_scraper',help='Enter name')
+    parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
+    parser.add_argument('name', type=str, nargs='?', default = 'manhattanbeach_scraper', help='Enter name')
     parser.add_argument('--id', type=str, nargs='?', default = "5f57a3f6b011042085c43c57", help = "Object Id")
-    parser.add_argument('--category',type=str,nargs='?',default="Automotive & Marine",help='Enter limit')
+    parser.add_argument('--category', type=str, nargs='?', default = "Automotive & Marine", help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
@@ -192,5 +193,5 @@ if __name__ == '__main__':
     category = args.category
     print(userid, name, category)
 
-    scraper_obj = Scraper(userid, name, id,  category)
+    scraper_obj = Scraper(userid, name, id, category)
     scraper_obj.scrape(MB_scraper)
