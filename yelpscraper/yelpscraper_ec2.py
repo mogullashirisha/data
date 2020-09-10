@@ -5,13 +5,27 @@ import os
 import time
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
-import pymongo
+from mongoengine import *
+from mongoengine.context_managers import switch_collection
 import urllib.parse
 import argparse
 import datetime
-from sym_data import get_codes
 from sys import stdout
 from validate_email import validate_email
+
+class Website(EmbeddedDocument):
+  business_name = StringField(max_length=250, required=True)
+  website_link = StringField(max_length=250, required=True)
+  emails = ListField(EmailField(unique= True))
+
+class MB_scraper(Document):
+    user = StringField(max_length=120, required=True)
+    name = StringField(max_length=120, required=True)
+    status = StringField(max_length=120)
+    email_counter = IntField()
+    created_timestamp = DateTimeField()
+    last_updated = DateTimeField()
+    collection_of_email_scraped = ListField(EmbeddedDocumentField(Website), unique=True)
 
 class Scraper:
     def __init__(self,userid,name,keyword,city,limit):
@@ -23,9 +37,9 @@ class Scraper:
         self.counter = 0
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
+        self.all_websites = []
         self.final_result = set()
-        self.counter = 0
-        self.collection = self.start_database()
+        self.email_counter = 0
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -57,6 +71,7 @@ class Scraper:
                     for em in new_emails:
                         if validate_email(em):
                             only_valid.add(em)
+                    self.email_counter += len(only_valid)
                     print("------VALID EMAIL SET------")
                     print(only_valid)
                     self.AllInternalEmails.update(only_valid)
@@ -67,117 +82,111 @@ class Scraper:
     def splitaddress(self,address):
         return (address.replace("http://", "").replace("https://", "").split("/"))
 
-    def start_database(self):
-        client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
-        db = client['codemarket_devasish']
-        collection = db['yelpscrapermailinglist']
-        return collection
-
     def get_url(self, start=0):
-    # https://www.yelp.com/search?find_desc=Therapist&find_loc=San+Francisco%2C+CA&ns=
-        path = 'symbols.tsv'
-        encoder = get_codes(path, 'hex')
-        desc = encoder.replace_sym(self.keyword)
-        loc = encoder.replace_sym(self.city)
+        # https://www.yelp.com/search?find_desc=Therapist&find_loc=San+Francisco%2C+CA&ns=
+        desc = self.keyword
+        loc = self.city
         url = f'https://www.yelp.com/search?find_desc={desc}&find_loc={loc}&ns=1&start={start}'
-        path = 'symbols.tsv'
         return url
 
-    def scrape(self):
+    def scrape(self, MB_scraper):
         self.flag = 0
         self.no_email = True
         print('Begin Scraping')
+        connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
         while self.no_email and self.flag < 50:
             chrome_options = Options()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument('--disable-dev-shm-usage')
             driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
             # driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
             try:
-                for start in range(0, self.limit, 10):
-                    url = self.get_url(start)
-                    # print(url)
-                    driver.get(url)
-                    html = driver.page_source
-                    soup = BeautifulSoup(html, 'html.parser')
-                    bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
-                    lilist = bussiness_list.findChildren(['li'])
-                    for li in lilist:
-                        status = f'Scraping website-{self.counter + 1}'
-                        # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
-                        link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
-                        if link == None:
-                            continue
-                    
-                        driver.get("https://www.yelp.com/" + link['href'])
-                        time.sleep(7)
-                        profile = driver.page_source
-                        profile_soup = BeautifulSoup(profile, 'html.parser')
-                        websitelink = None
-                        business_name = profile_soup.find('h1',class_ = "lemon--h1__373c0__2ZHSL heading--h1__373c0___56D3 undefined heading--inline__373c0__1jeAh").text
-                        print(business_name)
-                        if profile_soup.find("p", string="Business website") != None:
-                            if profile_soup.find("p", string="Business website").findNext('p') != None:
-                                if profile_soup.find("p", string="Business website").findNext('p').find('a') != None:
-                                    websitelink = profile_soup.find("p", string="Business website").findNext('p').find('a')
-                        if websitelink == None:
-                            print("Link Not Found")
-                            print("https://www.yelp.com/" + link['href'])
-                            continue
-                        try:
-                            driver.get("http://"+websitelink.text)
-                        except:
-                            print("An exception occurred")
-                            continue
-                        time.sleep(10)
-                        site_url = "http://"+websitelink.text
-                        if site_url == "http://libertytax.com/":
-                            continue
-                        websitepage = driver.page_source
-                        websiteSoup = BeautifulSoup(websitepage, 'html.parser')
-                        new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
-                        only_valid = set()
-                        for em in new_emails:
-                            if validate_email(em):
-                                only_valid.add(em)
-                        self.no_email = False
-                        print("------VALID EMAIL SET------")
-                        print(only_valid)
-                        self.AllInternalEmails.update(only_valid)
-                        self.getInternalLinks(websiteSoup, self.splitaddress(websitelink.text)[0])
-                        self.AllInternalLinks.clear()
-
-                        if len(self.AllInternalEmails) == 0:
-                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": " "}#,"cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
-                        else:
-                            data_dict = {"business_name": business_name,"site_url": site_url,"Emails": self.AllInternalEmails }#,"cleaned email":" ","cleaned_by":" ","cleaned_timestamp":" "}
-                 
-                        self.final_result.add(repr(data_dict))
-                
-                        self.AllInternalEmails.clear()
-                        self.counter += 1
-
-                        if self.counter == self.limit:
-                            status = 'Scraping Completed'
-                            self.store_emails(status)
-                            break
+                with switch_collection(MB_scraper, 'yelpscrapermailinglist') as MB_scraper:
+                    for start in range(0, (self.limit* 10)+1, 10):
+                        url = self.get_url(start)
+                        # print(url)
+                        driver.get(url)
+                        html = driver.page_source
+                        soup = BeautifulSoup(html, 'html.parser')
+                        bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
+                        lilist = bussiness_list.findChildren(['li'])
+                        for li in lilist:
+                            status = 'Scraping website'
+                            self.email_counter = 0
+                            MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = status)
+                            # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
+                            link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
+                            if link == None:
+                                continue
                         
-                        self.store_emails(status)
-                break
+                            driver.get("https://www.yelp.com/" + link['href'])
+                            time.sleep(7)
+                            profile = driver.page_source
+                            profile_soup = BeautifulSoup(profile, 'html.parser')
+                            websitelink = None
+                            business_name = profile_soup.find('h1',class_ = "lemon--h1__373c0__2ZHSL heading--h1__373c0___56D3 undefined heading--inline__373c0__1jeAh").text
+                            print(business_name)
+                            if business_name in self.all_websites:
+                                continue
+                            else:
+                                self.all_websites.append(business_name)
+                            if profile_soup.find("p", string="Business website") != None:
+                                if profile_soup.find("p", string="Business website").findNext('p') != None:
+                                    if profile_soup.find("p", string="Business website").findNext('p').find('a') != None:
+                                        websitelink = profile_soup.find("p", string="Business website").findNext('p').find('a')
+                            if websitelink == None:
+                                print("Link Not Found")
+                                print("https://www.yelp.com/" + link['href'])
+                                continue
+                            try:
+                                driver.get("http://"+websitelink.text)
+                            except:
+                                print("An exception occurred")
+                                continue
+                            time.sleep(10)
+                            site_url = "http://"+websitelink.text
+                            if site_url == "http://libertytax.com/":
+                                continue
+                            websitepage = driver.page_source
+                            websiteSoup = BeautifulSoup(websitepage, 'html.parser')
+                            new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
+                            only_valid = set()
+                            for em in new_emails:
+                                if validate_email(em):
+                                    only_valid.add(em)
+                            self.no_email = False
+                            self.email_counter += len(only_valid)
+                            print("------VALID EMAIL SET------")
+                            print(only_valid)
+                            self.AllInternalEmails.update(only_valid)
+                            self.getInternalLinks(websiteSoup, self.splitaddress(websitelink.text)[0])
+                            self.AllInternalLinks.clear()
+
+                            if len(self.AllInternalEmails) == 0:
+                                data_dict = {"business_name": business_name,"site_url": site_url,"Emails": []}
+                            else:
+                                data_dict = {"business_name": business_name,"site_url": site_url,"Emails": self.AllInternalEmails }
+                    
+                            website_object = Website()
+                            website_object.business_name = data_dict["business_name"]
+                            website_object.website_link = data_dict["site_url"]
+                            website_object.emails = data_dict["Emails"]
+                    
+                            self.AllInternalEmails.clear()
+                            
+                            MB_scraper.objects(userid = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
+                            MB_scraper.objects(userid = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
+                            MB_scraper.objects(userid = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
+                    
+                    MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = "Scraping Completed")
+                    break
 
             except AttributeError:
                 self.flag += 1
                 print(f"trial:{self.flag}")
         print('End Scraping')
-
-    def store_emails(self, status):
-        print('Updating Database')
-        email_collection = repr(self.final_result)
-        query = {'user_id':self.userid,'name':self.name}
-        newvalues = { "$set": {'limit':self.limit, 'created timestamp':datetime.datetime.now(),'collection of email scraped': email_collection,'status': status } }
-        self.collection.update_one(query,newvalues)
-        print('Database Updated')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -196,4 +205,4 @@ if __name__ == '__main__':
     print(userid,name,keyword,city,limit)
 
     scraper_obj = Scraper(userid,name,keyword,city,limit)
-    scraper_obj.scrape()
+    scraper_obj.scrape(MB_scraper)
