@@ -19,13 +19,16 @@ class Website(EmbeddedDocument):
   emails = ListField(EmailField(unique= True))
 
 class MB_scraper(Document):
-    user = StringField(max_length=120, required=True)
+    user_id = StringField(max_length=120, required=True)
     name = StringField(max_length=120, required=True)
     status = StringField(max_length=120)
+    keyword = StringField(max_length=250)
+    city = StringField(max_length=250)
     email_counter = IntField()
+    limit = IntField()
     created_timestamp = DateTimeField()
     last_updated = DateTimeField()
-    collection_of_email_scraped = ListField(EmbeddedDocumentField(Website), unique=True)
+    collection_of_email_scraped = EmbeddedDocumentListField(Website)
 
 class Scraper:
     def __init__(self,userid,name,keyword,city,limit):
@@ -99,11 +102,12 @@ class Scraper:
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+            # chrome_options.add_argument('--disable-dev-shm-usage')
+            # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+            driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
             try:
                 with switch_collection(MB_scraper, 'yelpscrapermailinglist') as MB_scraper:
+                    MB_scraper.objects(user_id = self.userid, name = self.name).update(set__limit = self.limit)
                     for start in range(0, (self.limit* 10)+1, 10):
                         url = self.get_url(start)
                         # print(url)
@@ -115,7 +119,7 @@ class Scraper:
                         for li in lilist:
                             status = 'Scraping website'
                             self.email_counter = 0
-                            MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = status)
+                            MB_scraper.objects(user_id = self.userid, name = self.name).update(set__status = status)
                             # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
                             link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
                             if link == None:
@@ -176,11 +180,11 @@ class Scraper:
                     
                             self.AllInternalEmails.clear()
                             
-                            MB_scraper.objects(userid = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
-                            MB_scraper.objects(userid = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
-                            MB_scraper.objects(userid = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
+                            MB_scraper.objects(user_id = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
+                            MB_scraper.objects(user_id = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
+                            MB_scraper.objects(user_id = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
                     
-                    MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = "Scraping Completed")
+                    MB_scraper.objects(user_id = self.userid, name = self.name).update(set__status = "Scraping Completed")
                     break
 
             except AttributeError:
