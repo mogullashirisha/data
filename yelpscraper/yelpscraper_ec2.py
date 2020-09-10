@@ -171,7 +171,7 @@ class Scraper:
                             if len(self.AllInternalEmails) == 0:
                                 data_dict = {"business_name": business_name,"site_url": site_url,"Emails": []}
                             else:
-                                data_dict = {"business_name": business_name,"site_url": site_url,"Emails": self.AllInternalEmails }
+                                data_dict = {"business_name": business_name,"site_url": site_url,"Emails": list(self.AllInternalEmails) }
                     
                             website_object = Website()
                             website_object.business_name = data_dict["business_name"]
