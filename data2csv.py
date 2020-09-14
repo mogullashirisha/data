@@ -38,15 +38,35 @@ def convert_to_segment(dataframe):
   dataframe.EMAIL = dataframe.EMAIL.apply(lambda x: x.lower() if type(x) == str else np.nan)
   dataframe.dropna(inplace= True)
   dataframe.drop_duplicates(inplace = True)
+  dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
-if __name__ == "__main__":  
+def export(name = 'mb_lawyer'):
     db = 'codemarket_devasish'
-    collection = 'yelpscrapermailinglist' #'manhattanBeach_scraper'
-    query = {'user_id':'devasish','name':'mb_lawyer'} #{'user':'devasish','name':'manhattanbeach_scraper'}
+    collection = 'Chamber_of_Commerce' #'yelpscrapermailinglist'
+    query =  {'user':'devasish','name':'manhattanbeach_scraper'} #{'user_id':'devasish','name': name}
     columns = ["keyword", "city"]
-    new_col = {"business_name":"Attributes.business_name", "website_link": "Attributes.website_link", "emails":"EMAIL"}#, "category": "Attributes.category"}
-    data = get_data_from_db(db, collection, query, new_col, columns=columns)
+    new_col = {"business_name":"Attributes.business_name", "website_link": "Attributes.website_link", "emails":"EMAIL", "category": "Attributes.category"}
+    data = get_data_from_db(db, collection, query, new_col) # , columns=columns)
     data = convert_to_segment(data)
     print(data)
-    # data.to_csv("exports/manhattan_data_clean.csv")
+    data.to_csv(f"exports/Chamber of Commerce - Manhattan Beach.csv")
+
+if __name__ == "__main__":
+  '''ls = ["MB_Realtor",
+        "mb_real_estate",
+        "mb_lawyer",
+        "mb_legal",
+        "mb_accountant",
+        "mb_architect",
+        "mb_marketing",
+        "mb_advertisement",
+        "mb_photographer",
+        "mb_therapist",
+        "mb_software",
+        "mb_insurance",
+        "mb_financial",
+        "mb_consultant",
+        "mb_nutritionist"]
+  for name in ls:'''
+  export("name")
