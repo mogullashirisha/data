@@ -44,7 +44,7 @@ class Scraper:
     def __init__(self, userid, name, id, category):
         self.userid = userid
         self.name = name
-        self.category = ['Arts%2C+Culture+%26+Entertainment', 'Automotive+%26+Marine', 'Business+%26+Professional+Services1','Advertising+%26+Media']#category
+        self.category = category
         self.id = id
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
@@ -145,7 +145,7 @@ class Scraper:
                 status = f'Scraping website'
                 MB_scraper.objects(id = self.id).update(set__status = status )
                 category = cate[0].text
-                if urllib.parse.quote_plus(category) in self.category:
+                if urllib.parse.quote_plus(category) != self.category:
                     continue
                 category_url = cate[0]['href']
                 self.driver.get(category_url)
@@ -163,11 +163,26 @@ class Scraper:
                     time.sleep(7)
                     profile = self.driver.page_source
                     profile_soup = BeautifulSoup(profile, 'html.parser')
-                    telephone = self.get_telephone_no(profile_soup.find('span', itemprop = "telephone").text)
-                    postal_code = profile_soup.find('span', itemprop = "postalCode").text
-                    region = profile_soup.find('span', itemprop = "addressRegion").text
-                    locality = profile_soup.find('span', itemprop = "addressLocality").text
-                    street = profile_soup.find('span', itemprop = "streetAddress").text
+                    try:
+                        telephone = self.get_telephone_no(profile_soup.find('span', itemprop = "telephone").text)
+                    except:
+                        telephone = 0
+                    try:
+                        postal_code = profile_soup.find('span', itemprop = "postalCode").text
+                    except:
+                        postal_code = 0
+                    try:
+                        region = profile_soup.find('span', itemprop = "addressRegion").text
+                    except:
+                        region = " "
+                    try:
+                        locality = profile_soup.find('span', itemprop = "addressLocality").text
+                    except:
+                        locality = " "    
+                    try:
+                        street = profile_soup.find('span', itemprop = "streetAddress").text
+                    except:
+                        street = " "
                     website = profile_soup.find('a', {"itemprop" : "url", "class" : "card-link"})
                     try:
                         websitelink = website['href']
