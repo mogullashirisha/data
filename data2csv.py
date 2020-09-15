@@ -37,20 +37,29 @@ def convert_to_segment(dataframe):
   dataframe = dataframe.explode('EMAIL').reset_index(drop=True)
   dataframe.EMAIL = dataframe.EMAIL.apply(lambda x: x.lower() if type(x) == str else np.nan)
   dataframe.dropna(inplace= True)
-  dataframe.drop_duplicates(inplace = True)
+  # dataframe.drop_duplicates(inplace = True)
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
 def export(name = 'mb_lawyer'):
     db = 'codemarket_devasish'
     collection = 'Chamber_of_Commerce' #'yelpscrapermailinglist'
-    query =  {'user':'devasish','name':'manhattanbeach_scraper'} #{'user_id':'devasish','name': name}
-    columns = ["keyword", "city"]
-    new_col = {"business_name":"Attributes.business_name", "website_link": "Attributes.website_link", "emails":"EMAIL", "category": "Attributes.category"}
-    data = get_data_from_db(db, collection, query, new_col) # , columns=columns)
+    query =  {'user_id':'devasish','name':name}
+    columns = ["city"]#"keyword", 
+    new_col = {"business_name":"Attributes.business_name",
+              "website_link": "Attributes.website_link",
+              "emails":"EMAIL",
+              "category": "Attributes.category",
+              "telephone": "Attributes.telephone",
+              "postal_code": "Attributes.postal_code",
+              "region": "Attributes.region",
+              "street": "Attributes.street",
+              "locality": "Attributes.locality",
+              }
+    data = get_data_from_db(db, collection, query, new_col , columns=columns)
     data = convert_to_segment(data)
     print(data)
-    data.to_csv(f"exports/Chamber of Commerce - Manhattan Beach.csv")
+    data.to_csv(f"exports/Chamber of Commerce-HB-Advertising and Media.csv")
 
 if __name__ == "__main__":
   '''ls = ["MB_Realtor",
@@ -69,4 +78,4 @@ if __name__ == "__main__":
         "mb_consultant",
         "mb_nutritionist"]
   for name in ls:'''
-  export("name")
+  export("hermosa_beach_scraper")

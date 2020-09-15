@@ -21,16 +21,17 @@ class Website(EmbeddedDocument):
     emails = ListField(EmailField())
     telephone = IntField(min_value=0, max_value=9999999999)
     postal_code = IntField()
-    region = StringField()
-    locality = StringField()
-    street = StringField()
-    facebook_links = ListField(StringField())
-    twitter_links = ListField(StringField())
+    state = StringField()
+    city = StringField()
+    Address_line2 = StringField()
+    Address_line1 = StringField()
+    # facebook_links = ListField(StringField())
+    # twitter_links = ListField(StringField())
 
 class MB_scraper(Document):
     userid = StringField(max_length=120, required=True)
     name = StringField(max_length=120, required=True)
-    city = StringField(max_length=250, required=True)
+    chamber_of_commerce = StringField(max_length=250, required=True)
     status = StringField(max_length=120)
     email_counter = IntField()
     created_timestamp = DateTimeField()
@@ -53,8 +54,8 @@ class Scraper:
         self.counter = 0
         self.email_counter = 0
         self.website_scrapped = {}
-        self.AllFBlinks = set()
-        self.AllTwitterlinks = set()
+        # self.AllFBlinks = set()
+        # self.AllTwitterlinks = set()
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -85,12 +86,12 @@ class Scraper:
                     
                     # facebook
                     # facebook
-                    facebook_links = set(re.findall(r"https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage, re.I))
-                    self.AllFBlinks.update(facebook_links)
+                    # facebook_links = set(re.findall("https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage.text, re.I))
+                    # self.AllFBlinks.update(facebook_links)
                     
-                    # twitter
-                    twitter_links = set(re.findall(r"https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage, re.I))
-                    self.AllTwitterlinks.update(twitter_links)
+                    # # twitter
+                    # twitter_links = set(re.findall("https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage.text, re.I))
+                    # self.AllTwitterlinks.update(twitter_links)
                     
 
                     new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage.text, re.I))
@@ -126,9 +127,9 @@ class Scraper:
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
-        # chrome_options.add_argument('--disable-dev-shm-usage')
-        # self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-        self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+        # self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
 
         with switch_collection(MB_scraper, 'Chamber_of_Commerce') as MB_scraper:
             print("Connection Established")
@@ -179,13 +180,13 @@ class Scraper:
                     websitepage = self.driver.page_source
                     websiteSoup = BeautifulSoup(websitepage, 'html.parser')
                     
-                    # facebook
-                    facebook_links = set(re.findall(r"https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage, re.I))
-                    self.AllFBlinks.update(facebook_links)
+                    # # facebook
+                    # facebook_links = set(re.findall(r"https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage, re.I))
+                    # self.AllFBlinks.update(facebook_links)
                     
-                    # twitter
-                    twitter_links = set(re.findall(r"https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage, re.I))
-                    self.AllTwitterlinks.update(twitter_links)
+                    # # twitter
+                    # twitter_links = set(re.findall(r"https?://(www\\.)?twitter\\.com/[^(share)]?(\\w+\\.?)+", websitepage, re.I))
+                    # self.AllTwitterlinks.update(twitter_links)
                     
                     new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", websitepage, re.I))
                     only_valid = set()
@@ -203,8 +204,8 @@ class Scraper:
                     self.AllInternalEmails.update(only_valid)
                     self.getInternalLinks(websiteSoup, self.splitaddress(websitelink)[0])
                     self.AllInternalLinks.clear()
-                    self.AllFBlinks.clear()
-                    self.AllTwitterlinks.clear()
+                    # self.AllFBlinks.clear()
+                    # self.AllTwitterlinks.clear()
 
                     data_dict = {"business_name": business_name,
                                 "site_url": websitelink,
@@ -214,9 +215,9 @@ class Scraper:
                                 "Postal_Code": postal_code,
                                 "Street": street,
                                 "Region": region,
-                                "locality": locality,
-                                "Facebook": list(self.AllFBlinks),
-                                "Twitter": list(self.AllTwitterlinks)
+                                "locality": locality
+                                # "Facebook": list(self.AllFBlinks),
+                                # "Twitter": list(self.AllTwitterlinks)
                                 }
             
                     website_object = Website()
@@ -226,11 +227,11 @@ class Scraper:
                     website_object.emails = data_dict["Emails"]
                     website_object.telephone = data_dict["Telephone"]
                     website_object.postal_code = data_dict["Postal_Code"]
-                    website_object.street = data_dict["Street"]
-                    website_object.region = data_dict["Region"]
-                    website_object.locality = data_dict["locality"]
-                    website_object.facebook_links = data_dict["Facebook"]
-                    website_object.twitter_links = data_dict["Twitter"]
+                    website_object.Address_line1 = data_dict["Street"]
+                    website_object.state = data_dict["Region"]
+                    website_object.city = data_dict["locality"]
+                    # website_object.facebook_links = data_dict["Facebook"]
+                    # website_object.twitter_links = data_dict["Twitter"]
             
                     self.AllInternalEmails.clear()
                     
@@ -244,7 +245,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'hermosa_beach_scraper', help='Enter name')
-    parser.add_argument('id', type=str, nargs='?', default = "5f5f6720b5de48ab85255b42", help = "Object Id")
+    parser.add_argument('id', type=str, nargs='?', default = "5f6060034d1e75b5eaf24c09", help = "Object Id")
     parser.add_argument('category', type=str, nargs='?', default = urllib.parse.quote_plus("Advertising & Media"), help='Enter limit')
     args = parser.parse_args()
 
