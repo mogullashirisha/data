@@ -36,16 +36,15 @@ class MB_scraper(Document):
     email_counter = IntField()
     created_timestamp = DateTimeField()
     last_updated = DateTimeField()
-    collection_of_email_scraped = ListField(EmbeddedDocumentField(Website))#, unique= True)
+    collection_of_email_scraped = ListField(EmbeddedDocumentField(Website))
 
 # class prev_data(HB_scraper):
 
 class Scraper:
-    def __init__(self, userid, name, id, category, city):
+    def __init__(self, userid, name, id, category):
         self.userid = userid
         self.name = name
         self.category = category
-        self.city = city
         self.id = id
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
@@ -127,9 +126,9 @@ class Scraper:
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-        # self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+        # chrome_options.add_argument('--disable-dev-shm-usage')
+        # self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+        self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
 
         with switch_collection(MB_scraper, 'Chamber_of_Commerce') as MB_scraper:
             print("Connection Established")
@@ -245,7 +244,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'hermosa_beach_scraper', help='Enter name')
-    parser.add_argument('id', type=str, nargs='?', default = "5f60716e2871383ffb67928d", help = "Object Id")
+    parser.add_argument('id', type=str, nargs='?', default = "5f607d0044b039a93773c995", help = "Object Id")
     parser.add_argument('category', type=str, nargs='?', default = urllib.parse.quote_plus("Advertising & Media"), help='Enter limit')
     args = parser.parse_args()
 
@@ -255,5 +254,5 @@ if __name__ == '__main__':
     category = args.category
     print(userid, name, category)
 
-    scraper_obj = Scraper(userid, name, id, category, "Hermosa Beach")
+    scraper_obj = Scraper(userid, name, id, category)
     scraper_obj.scrape(MB_scraper)
