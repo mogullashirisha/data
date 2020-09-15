@@ -20,9 +20,9 @@ RUN /usr/local/bin/chromedriver --version
 ENV DISPLAY=:99 
 
 # Install requirements first so this step is cached by Docker
-COPY /requirements.txt /home/ubuntu/data/manhattanBeach_scraper/requirements.txt
-COPY /scraper_ec2.py  /home/ubuntu/data/manhattanBeach_scraper/scraper_ec2.py
-WORKDIR /home/ubuntu/data/manhattanBeach_scraper
+COPY /requirements.txt /home/ubuntu/data/HermosaBeach_scraper/requirements.txt
+COPY /scraper_ec2.py  /home/ubuntu/data/HermosaBeach_scraper/scraper_ec2.py
+WORKDIR /home/ubuntu/data/HermosaBeach_scraper
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
