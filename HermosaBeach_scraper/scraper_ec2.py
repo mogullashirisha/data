@@ -234,9 +234,12 @@ class Scraper:
             
                     self.AllInternalEmails.clear()
                     
-                    MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
-                    MB_scraper.objects(id = self.id).update(inc__email_counter = self.email_counter)
-                    MB_scraper.objects(id = self.id).update(set__last_updated = datetime.datetime.now())
+                    try:
+                        MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
+                        MB_scraper.objects(id = self.id).update(inc__email_counter = self.email_counter)
+                        MB_scraper.objects(id = self.id).update(set__last_updated = datetime.datetime.now())
+                    except:
+                        print("Insertion Failed --- Data Not Unique")
         
             MB_scraper.objects(id = self.id).update(set__status = "Scraping Completed")
 
