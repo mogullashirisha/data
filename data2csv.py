@@ -34,35 +34,37 @@ def get_data_from_db(db_name, collection_name, query, new_col, columns = None):
 def convert_to_segment(dataframe):
   m,_ = dataframe.shape
   dataframe['ChannelType'] = ["EMAIL"]*m
-  dataframe = dataframe.explode('EMAIL').reset_index(drop=True)
-  dataframe.EMAIL = dataframe.EMAIL.apply(lambda x: x.lower() if type(x) == str else np.nan)
+  dataframe = dataframe.explode('Address').reset_index(drop=True)
+  dataframe.Address = dataframe.Address.apply(lambda x: x.lower() if type(x) == str else np.nan)
   dataframe.dropna(inplace= True)
   # dataframe.drop_duplicates(inplace = True)
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
-def export(name = 'mb_lawyer'):
+def export(name = 'mb_lawyer', data = None):
     db = 'codemarket_devasish'
-    collection = 'Chamber_of_Commerce' #'yelpscrapermailinglist'
+    collection = 'yelpscrapermailinglist' # 'Chamber_of_Commerce'
     query =  {'user_id':'devasish','name':name}
-    columns = ["city"]#"keyword", 
+    columns = ["city","keyword"]
     new_col = {"business_name":"Attributes.business_name",
               "website_link": "Attributes.website_link",
-              "emails":"EMAIL",
+              "emails":"Address",
               "category": "Attributes.category",
               "telephone": "Attributes.telephone",
-              "postal_code": "Attributes.postal_code",
-              "region": "Attributes.region",
-              "street": "Attributes.street",
-              "locality": "Attributes.locality",
+              "postal_code": "Location.PostalCode",
+              "region": "Location.Region",
+              "street": "Attributes.address_Line1",
+              "locality": "Location.City",
               }
-    data = get_data_from_db(db, collection, query, new_col , columns=columns)
-    data = convert_to_segment(data)
-    print(data)
-    data.to_csv(f"exports/Chamber of Commerce-HB-Advertising and Media.csv")
+    df = get_data_from_db(db, collection, query, new_col , columns=columns)
+    df = convert_to_segment(df)
+    if type(data) == None:
+      return df
+    else:
+      return pandas.concat([df, data])
 
 if __name__ == "__main__":
-  '''ls = ["MB_Realtor",
+  ls = ["MB_Realtor",
         "mb_real_estate",
         "mb_lawyer",
         "mb_legal",
@@ -77,5 +79,7 @@ if __name__ == "__main__":
         "mb_financial",
         "mb_consultant",
         "mb_nutritionist"]
-  for name in ls:'''
-  export("hermosa_beach_scraper")
+  data = None
+  for name in ls:
+    data = export(name, data)
+  data.to_csv(f"exports/yelp.csv",index=False)

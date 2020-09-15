@@ -16,14 +16,21 @@ from validate_email import validate_email
 
 
 class Website(EmbeddedDocument):
-  business_name = StringField(max_length=250, required=True)
-  website_link = StringField(max_length=250, required=True)
-  category = StringField(max_length=250, required=True)
-  emails = ListField(EmailField())
+    business_name = StringField(max_length=250, required=True)
+    website_link = StringField(max_length=250, required=True)
+    category = StringField(max_length=250, required=True)
+    emails = ListField(EmailField())
+    telephone = IntField(min_value=0, max_value=9999999999)
+    postal_code = IntField()
+    state = StringField()
+    city = StringField()
+    Address_line2 = StringField()
+    Address_line1 = StringField()
 
 class MB_scraper(Document):
-    user = StringField(max_length=120, required=True)
+    userid = StringField(max_length=120, required=True)
     name = StringField(max_length=120, required=True)
+    chamber_of_commerce = StringField(max_length=250, required=True)
     status = StringField(max_length=120)
     email_counter = IntField()
     created_timestamp = DateTimeField()
@@ -91,6 +98,9 @@ class Scraper:
     def splitaddress(self,address):
         return (address.replace("http://", "").replace("https://", "").split("/"))
 
+    def get_telephone_no(self, telephone):
+        return int(re.sub(r'[^\w]', '', telephone))
+
     def scrape(self, MB_scraper):
         self.flag = 0
         self.no_email = True
@@ -135,6 +145,26 @@ class Scraper:
                     time.sleep(7)
                     profile = self.driver.page_source
                     profile_soup = BeautifulSoup(profile, 'html.parser')
+                    try:
+                        telephone = self.get_telephone_no(profile_soup.find('span', itemprop = "telephone").text)
+                    except:
+                        telephone = 0
+                    try:
+                        postal_code = profile_soup.find('span', itemprop = "postalCode").text
+                    except:
+                        postal_code = 0
+                    try:
+                        region = profile_soup.find('span', itemprop = "addressRegion").text
+                    except:
+                        region = " "
+                    try:
+                        locality = profile_soup.find('span', itemprop = "addressLocality").text
+                    except:
+                        locality = " "    
+                    try:
+                        street = profile_soup.find('span', itemprop = "streetAddress").text
+                    except:
+                        street = " "
                     website = profile_soup.find('a', itemprop = "url")
                     try:
                         websitelink = website['href']
@@ -172,12 +202,20 @@ class Scraper:
                     website_object.website_link = data_dict["site_url"]
                     website_object.category = data_dict["Category"]
                     website_object.emails = data_dict["Emails"]
+                    website_object.telephone = data_dict["Telephone"]
+                    website_object.postal_code = data_dict["Postal_Code"]
+                    website_object.Address_line1 = data_dict["Street"]
+                    website_object.state = data_dict["Region"]
+                    website_object.city = data_dict["locality"]
             
                     self.AllInternalEmails.clear()
                     
-                    MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
-                    MB_scraper.objects(id = self.id).update(inc__email_counter = self.email_counter)
-                    MB_scraper.objects(id = self.id).update(set__last_updated = datetime.datetime.now())
+                    try:
+                        MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
+                        MB_scraper.objects(id = self.id).update(inc__email_counter = self.email_counter)
+                        MB_scraper.objects(id = self.id).update(set__last_updated = datetime.datetime.now())
+                    except:
+                        print("Insertion Failed --- Data Not Unique")
         
             MB_scraper.objects(id = self.id).update(set__status = "Scraping Completed")
 
@@ -186,7 +224,7 @@ if __name__ == '__main__':
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'manhattanbeach_scraper', help='Enter name')
     parser.add_argument('id', type=str, nargs='?', default = "5f57a3f6b011042085c43c57", help = "Object Id")
-    parser.add_argument('category', type=str, nargs='?', default = "Automotive & Marine", help='Enter limit')
+    parser.add_argument('category', type=str, nargs='?', default = urllib.parse.quote_plus("Automotive & Marine"), help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
