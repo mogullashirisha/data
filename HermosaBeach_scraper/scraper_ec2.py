@@ -245,7 +245,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'hermosa_beach_scraper', help='Enter name')
-    parser.add_argument('id', type=str, nargs='?', default = "5f6060034d1e75b5eaf24c09", help = "Object Id")
+    parser.add_argument('id', type=str, nargs='?', default = "5f60716e2871383ffb67928d", help = "Object Id")
     parser.add_argument('category', type=str, nargs='?', default = urllib.parse.quote_plus("Advertising & Media"), help='Enter limit')
     args = parser.parse_args()
 
