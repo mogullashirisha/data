@@ -36,7 +36,7 @@ class MB_scraper(Document):
     email_counter = IntField()
     created_timestamp = DateTimeField()
     last_updated = DateTimeField()
-    collection_of_email_scraped = ListField(EmbeddedDocumentField(Website), unique= True)
+    collection_of_email_scraped = ListField(EmbeddedDocumentField(Website))#, unique= True)
 
 # class prev_data(HB_scraper):
 
