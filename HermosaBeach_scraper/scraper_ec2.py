@@ -44,7 +44,7 @@ class Scraper:
     def __init__(self, userid, name, id, category):
         self.userid = userid
         self.name = name
-        self.category = category
+        self.category = ['Arts%2C+Culture+%26+Entertainment', 'Automotive+%26+Marine', 'Business+%26+Professional+Services1','Advertising+%26+Media']#category
         self.id = id
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
@@ -145,7 +145,7 @@ class Scraper:
                 status = f'Scraping website'
                 MB_scraper.objects(id = self.id).update(set__status = status )
                 category = cate[0].text
-                if urllib.parse.quote_plus(category) != self.category:
+                if urllib.parse.quote_plus(category) in self.category:
                     continue
                 category_url = cate[0]['href']
                 self.driver.get(category_url)
