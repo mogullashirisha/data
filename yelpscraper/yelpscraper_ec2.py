@@ -14,9 +14,15 @@ from sys import stdout
 from validate_email import validate_email
 
 class Website(EmbeddedDocument):
-  business_name = StringField(max_length=250, required=True)
-  website_link = StringField(max_length=250, required=True)
-  emails = ListField(EmailField(unique= True))
+    business_name = StringField(max_length=250, required=True)
+    website_link = StringField(max_length=250, required=True)
+    emails = ListField(EmailField(unique= True))
+    telephone = IntField(min_value=0, max_value=9999999999)
+    postal_code = IntField()
+    state = StringField()
+    city = StringField()
+    Address_line2 = StringField()
+    Address_line1 = StringField()
 
 class MB_scraper(Document):
     user_id = StringField(max_length=120, required=True)
@@ -85,6 +91,9 @@ class Scraper:
     def splitaddress(self,address):
         return (address.replace("http://", "").replace("https://", "").split("/"))
 
+    def get_telephone_no(self, telephone):
+        return int(re.sub(r'[^\w]', '', telephone))
+
     def get_url(self, start=0):
         # https://www.yelp.com/search?find_desc=Therapist&find_loc=San+Francisco%2C+CA&ns=
         desc = self.keyword
@@ -104,7 +113,7 @@ class Scraper:
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument('--disable-dev-shm-usage')
             driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
             try:
                 with switch_collection(MB_scraper, 'yelpscrapermailinglist') as MB_scraper:
                     MB_scraper.objects(user_id = self.userid, name = self.name).update(set__limit = self.limit)
@@ -114,14 +123,16 @@ class Scraper:
                         driver.get(url)
                         html = driver.page_source
                         soup = BeautifulSoup(html, 'html.parser')
-                        bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
+                        # bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
+                        bussiness_list = soup.find('ul',class_="lemon--ul__09f24__1_cxs undefined list__09f24__OXDHW")
                         lilist = bussiness_list.findChildren(['li'])
                         for li in lilist:
                             status = 'Scraping website'
                             self.email_counter = 0
                             MB_scraper.objects(user_id = self.userid, name = self.name).update(set__status = status)
                             # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
-                            link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
+                            # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
+                            link = li.find('a',class_="lemon--a__09f24__IEZFH link__09f24__1kwXV link-color--inherit__09f24__3PYlA link-size--inherit__09f24__2Uj95")
                             if link == None:
                                 continue
                         
@@ -136,6 +147,30 @@ class Scraper:
                                 continue
                             else:
                                 self.all_websites.append(business_name)
+                            
+                            state_ = "CA"
+                            address_2, street, city, state = ' '*4
+                            postal_code, telephone = 0, 0
+
+                            address_container = profile_soup.find("address", class_ = "lemon--address__373c0__2sPac")
+                            if address_container != None:
+                                address_elements =  address_container.findAll("p")
+                                for address_element in address_elements:
+                                    try:
+                                        address = address_element.find('span').text
+                                    except:
+                                        continue
+                                    if "St " in address or " St" in address:
+                                        street = address
+                                    elif state_ in address or state_ in address:
+                                        address_2 = address
+                                        city, address_3 = address_2.split(',')
+                                        _, state, postal_code = address_3.split(" ")
+                                    else:
+                                        address_line2 = address
+                            if profile_soup.find("p", string="Phone number") != None:
+                                if profile_soup.find("p", string="Phone number").findNext('p') != None:
+                                        telephone = self.get_telephone_no(profile_soup.find("p", string="Phone number").findNext('p').text)
                             if profile_soup.find("p", string="Business website") != None:
                                 if profile_soup.find("p", string="Business website").findNext('p') != None:
                                     if profile_soup.find("p", string="Business website").findNext('p').find('a') != None:
@@ -168,21 +203,44 @@ class Scraper:
                             self.getInternalLinks(websiteSoup, self.splitaddress(websitelink.text)[0])
                             self.AllInternalLinks.clear()
 
-                            if len(self.AllInternalEmails) == 0:
-                                data_dict = {"business_name": business_name,"site_url": site_url,"Emails": []}
-                            else:
-                                data_dict = {"business_name": business_name,"site_url": site_url,"Emails": list(self.AllInternalEmails) }
-                    
+                            data_dict = {"business_name": business_name,
+                                "site_url": site_url,
+                                "Emails": list(self.AllInternalEmails),
+                                "Telephone": telephone,
+                                "Postal_Code": postal_code,
+                                "Street": street,
+                                "Address_line2": address_line2,
+                                "State": state,
+                                "city": city
+                                }
+
                             website_object = Website()
                             website_object.business_name = data_dict["business_name"]
                             website_object.website_link = data_dict["site_url"]
                             website_object.emails = data_dict["Emails"]
+
+                            if telephone != 0:
+                                website_object.telephone = data_dict["Telephone"]
+                            if postal_code != 0:
+                                website_object.postal_code = data_dict["Postal_Code"]
+                            if street != ' ':
+                                website_object.Address_line1 = data_dict["Street"]
+                            if state != ' ':
+                                website_object.state = data_dict["State"]
+                            if city != ' ':
+                                website_object.city = data_dict["city"]
+                            if address_line2 != ' ':
+                                website_object.city = data_dict["Address_line2"]
                     
                             self.AllInternalEmails.clear()
                             
-                            MB_scraper.objects(user_id = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
-                            MB_scraper.objects(user_id = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
-                            MB_scraper.objects(user_id = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
+                            try:
+                                MB_scraper.objects(user_id = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
+                                MB_scraper.objects(user_id = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
+                                MB_scraper.objects(user_id = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
+                            except:
+                                print("Not Unique Data")
+
                     
                     MB_scraper.objects(user_id = self.userid, name = self.name).update(set__status = "Scraping Completed")
                     break

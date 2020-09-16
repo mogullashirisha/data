@@ -192,11 +192,17 @@ class Scraper:
                     self.getInternalLinks(websiteSoup, self.splitaddress(websitelink)[0])
                     self.AllInternalLinks.clear()
 
-                    if len(self.AllInternalEmails) == 0:
-                        data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": []}
-                    else:
-                        data_dict = {"business_name": business_name,"site_url": websitelink, "Category": category, "Emails": list(self.AllInternalEmails) }
-                
+                    data_dict = {"business_name": business_name,
+                                "site_url": websitelink,
+                                "Category": category,
+                                "Emails": list(self.AllInternalEmails),
+                                "Telephone": telephone,
+                                "Postal_Code": postal_code,
+                                "Street": street,
+                                "Region": region,
+                                "locality": locality
+                                }
+
                     website_object = Website()
                     website_object.business_name = data_dict["business_name"]
                     website_object.website_link = data_dict["site_url"]
