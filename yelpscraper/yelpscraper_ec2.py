@@ -108,7 +108,7 @@ class Scraper:
             try:
                 with switch_collection(MB_scraper, 'yelpscrapermailinglist') as MB_scraper:
                     MB_scraper.objects(user_id = self.userid, name = self.name).update(set__limit = self.limit)
-                    for start in range(0, (self.limit* 10)+1, 10):
+                    for start in range(0, 241 , 10):
                         url = self.get_url(start)
                         # print(url)
                         driver.get(url)
