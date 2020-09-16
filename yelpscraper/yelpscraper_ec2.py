@@ -149,11 +149,11 @@ class Scraper:
                                 self.all_websites.append(business_name)
                             
                             state_ = "CA"
-                            address_2, street, city, state = ' '*4
+                            address_line2, street, city, state = ' '*4
                             postal_code, telephone = 0, 0
 
                             address_container = profile_soup.find("address", class_ = "lemon--address__373c0__2sPac")
-                            if address_container != None:
+                            if address_container != None  
                                 address_elements =  address_container.findAll("p")
                                 for address_element in address_elements:
                                     try:
