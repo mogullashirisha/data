@@ -1,7 +1,8 @@
 # from mongolia import connect_to_database, authenticate_connection
 # from mongolia import DatabaseObject, ID_KEY, DatabaseCollection, 
 import urllib
-
+import pymongo
+import pandas as pd
 # class TestObject(DatabaseObject):
 #     PATH = "codemarket_devasish.manhattanBeach_scraper"
 #     DEFAULTS = {'user_id':'devasish','name':'manhattanbeach_scraper'}
@@ -48,7 +49,16 @@ with switch_collection(MB_scraper, 'manhattanBeach_scraper') as MB_scraper:
   target = "5f57a3f6b011042085c43c57"
   new_web = web1
   # MB_scraper.objects(id = target).update(push__collection_of_email_scraped = web1)
-  obj = MB_scraper.objects(id = target)
-  collection = obj.collection_of_email_scraped
-  print(collection)
-  # scraper1.save()
+  # obj = MB_scraper.objects(id = target)
+  # collection = obj.collection_of_email_scraped
+  client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
+  query={'user_id':'devasish','name': "hermosa_beach_scraper_test"}
+  db = client["codemarket_devasish"]
+  collection = db["Chamber_of_Commerce"]
+  document = collection.find_one(query)
+  data_email = document["collection_of_email_scraped"]
+  dataframe = pd.DataFrame(data_email)
+  col = dataframe.website_link.to_list()
+  print(col)
+
+  

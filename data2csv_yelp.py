@@ -37,29 +37,49 @@ def convert_to_segment(dataframe):
   dataframe = dataframe.explode('Address').reset_index(drop=True)
   dataframe.Address = dataframe.Address.apply(lambda x: x.lower() if type(x) == str else np.nan)
   dataframe.dropna(inplace= True)
-  dataframe.drop_duplicates(inplace = True)
+  # dataframe.drop_duplicates(inplace = True)
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
-def export(name = 'hermosa_beach_scraper'):
+def export(name = 'mb_lawyer', data = None):
     db = 'codemarket_devasish'
-    collection = 'Chamber_of_Commerce'
-    query =  {'userid':'devasish','name':name}
-    columns = ["chamber_of_commerce"]
-    new_col = {"business_name":"User.UserAttributes.business_name",
+    collection = 'yelpscrapermailinglist' # 'Chamber_of_Commerce'
+    query =  {'user_id':'devasish','name':name}
+    columns = ["city","keyword"]
+    new_col = {"business_name":"Attributes.business_name",
               "website_link": "Attributes.website_link",
               "emails":"Address",
-              "category": "User.UserAttributes.category",
-              "telephone": "User.UserAttributes.telephone",
+              "category": "Attributes.category",
+              "telephone": "Attributes.telephone",
               "postal_code": "Location.PostalCode",
-              "state": "Location.Region",
-              "Address_line1": "Attributes.address_Line1",
-              "city": "Location.City",
+              "region": "Location.Region",
+              "street": "Attributes.address_Line1",
+              "locality": "Location.City",
               }
     df = get_data_from_db(db, collection, query, new_col , columns=columns)
     df = convert_to_segment(df)
-    df.to_csv(f"exports/hermosa_beach_COC.csv",index=False)
-    
+    if type(data) == None:
+      return df
+    else:
+      return pandas.concat([df, data])
 
 if __name__ == "__main__":
-  export()
+  ls = ["MB_Realtor",
+        "mb_real_estate",
+        "mb_lawyer",
+        "mb_legal",
+        "mb_accountant",
+        "mb_architect",
+        "mb_marketing",
+        "mb_advertisement",
+        "mb_photographer",
+        "mb_therapist",
+        "mb_software",
+        "mb_insurance",
+        "mb_financial",
+        "mb_consultant",
+        "mb_nutritionist"]
+  data = None
+  for name in ls:
+    data = export(name, data)
+  data.to_csv(f"exports/yelp.csv",index=False)

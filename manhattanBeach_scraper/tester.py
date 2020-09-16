@@ -23,22 +23,33 @@ class Website(EmbeddedDocument):
   website_link = StringField(max_length=250, required=True)
   category = StringField(max_length=250, required=True)
   emails = ListField(EmailField())
+  telephone = IntField(min_value=0, max_value=9999999999)
+  postal_code = IntField()
+  region = StringField()
+  locality = StringField()
+  Address_line2 = StringField()
+  street = StringField()
+  twitter_links = LineStringField()
+  facebook_links = LineStringField()
+  state = StringField()
+  Address_line1 = StringField()
+  city = StringField()
 
 class MB_scraper(Document):
-    user = StringField(max_length=120, required=True)
+    userid = StringField(max_length=120, required=True)
     name = StringField(max_length=120, required=True)
     status = StringField(max_length=120)
     email_counter = IntField()
     created_timestamp = DateTimeField()
     collection_of_email_scraped = EmbeddedDocumentListField(Website)
 
-with switch_collection(MB_scraper, 'manhattanBeach_scraper') as MB_scraper:
+with switch_collection(MB_scraper, 'Chamber_of_Commerce') as MB_scraper:
 
   web1 = Website()
   web1.business_name = "secondtrials"
-  web1.website_link = "seconftrial.com"
-  web1.category = "second_Category"
-  web1.emails = ["secondemail@gmail.com","gmail@pasta.com"]
+  web1.website_link = "Edited"
+  web1.category = "Edited"
+  # web1.emails = ["secondemail@gmail.com","gmail@pasta.com"]
 
   # scraper1 = MB_scraper()
   # scraper1.user = 'devasish'
@@ -48,5 +59,6 @@ with switch_collection(MB_scraper, 'manhattanBeach_scraper') as MB_scraper:
   target = "5f57a3f6b011042085c43c57"
   new_web = web1
   # MB_scraper.objects(id = target).update(push__collection_of_email_scraped = web1)
-  MB_scraper.objects(id = target).update(set__email_counter = 1 )
+  # print(MB_scraper.objects(userid = 'devasish', name = 'hermosa_beach_scraper_test', collection_of_email_scraped__business_name = 'secondtrials').get())
+  obj = MB_scraper.objects(userid = 'devasish', name = 'hermosa_beach_scraper_test', collection_of_email_scraped__business_name = 'secondtrials').update(set__collection_of_email_scraped__S__city = "yes it's done")
   # scraper1.save()

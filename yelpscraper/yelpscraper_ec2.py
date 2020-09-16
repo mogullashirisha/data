@@ -49,6 +49,7 @@ class Scraper:
         self.all_websites = []
         self.final_result = set()
         self.email_counter = 0
+        self.get
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -87,6 +88,17 @@ class Scraper:
                     websitepage_soup = BeautifulSoup(websitepage.text, 'html.parser')
                     self.getInternalLinks(websitepage_soup,includeurl)
         return (internalLinks)
+
+    def get_scraped_data(self):
+        client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
+        query={'user_id': self.userid,'name': self.name}
+        db = client["codemarket_devasish"]
+        collection = db["yelpscrapermailinglist"]
+        document = collection.find_one(query)
+        data_email = document["collection_of_email_scraped"]
+        dataframe = pd.DataFrame(data_email)
+        col = dataframe.business_name.to_list()
+        self.all_websites = col
 
     def splitaddress(self,address):
         return (address.replace("http://", "").replace("https://", "").split("/"))
