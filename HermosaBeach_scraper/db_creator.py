@@ -34,9 +34,9 @@ connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.qu
 with switch_collection(MB_scraper, 'Chamber_of_Commerce') as MB_scraper:
     mbscrape = MB_scraper()
     mbscrape.userid = "devasish"
-    mbscrape.name = "hermosa_beach_scraper"
+    mbscrape.name = "manhattanbeach_scraper"
     mbscrape.status = "Scraping Started"
-    mbscrape.chamber_of_commerce = "Hermosa Beach"
+    mbscrape.chamber_of_commerce = "Manhattan Beach"
     mbscrape.email_counter = 0
     mbscrape.collection_of_email_scraped = []
     mbscrape.save()

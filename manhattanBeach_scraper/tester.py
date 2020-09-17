@@ -60,5 +60,5 @@ with switch_collection(MB_scraper, 'Chamber_of_Commerce') as MB_scraper:
   new_web = web1
   # MB_scraper.objects(id = target).update(push__collection_of_email_scraped = web1)
   # print(MB_scraper.objects(userid = 'devasish', name = 'hermosa_beach_scraper_test', collection_of_email_scraped__business_name = 'secondtrials').get())
-  obj = MB_scraper.objects(userid = 'devasish', name = 'hermosa_beach_scraper_test', collection_of_email_scraped__business_name = 'secondtrials').update(set__collection_of_email_scraped__S__city = "yes it's done")
+  obj = MB_scraper.objects(userid = 'devasish', name = 'manhattan_scraper', collection_of_email_scraped__business_name = 'Beach Cities Solar Consulting').update(set__collection_of_email_scraped__S__city = "one")
   # scraper1.save()
