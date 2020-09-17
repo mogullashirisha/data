@@ -144,7 +144,7 @@ class Scraper:
                 status = f'Scraping website'
                 MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = status )
                 category = cate[0].text
-                if urllib.parse.quote_plus(category) != self.category:
+                if category != self.category:
                     continue
                 category_url = cate[0]['href']
                 self.driver.get(category_url)
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'manhattanbeach_scraper', help='Enter name')
     parser.add_argument('id', type=str, nargs='?', default = "5f57a3f6b011042085c43c57", help = "Object Id")
-    parser.add_argument('category', type=str, nargs='?', default = urllib.parse.quote_plus("Automotive & Marine"), help='Enter limit')
+    parser.add_argument('--category', type=str, nargs='?', default = "Automotive & Marine", help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
