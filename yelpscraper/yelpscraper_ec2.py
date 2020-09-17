@@ -5,19 +5,21 @@ import os
 import time
 from selenium.webdriver.chrome.options import Options
 from selenium import webdriver
+import pymongo
 from mongoengine import *
 from mongoengine.context_managers import switch_collection
 import urllib.parse
 import argparse
 import datetime
 from sys import stdout
+import pandas as pd
 from validate_email import validate_email
 
 class Website(EmbeddedDocument):
     business_name = StringField(max_length=250, required=True)
     website_link = StringField(max_length=250, required=True)
     emails = ListField(EmailField(unique= True))
-    telephone = IntField(min_value=0, max_value=9999999999)
+    telephone = IntField(min_value=0)
     postal_code = IntField()
     state = StringField()
     city = StringField()
@@ -49,7 +51,10 @@ class Scraper:
         self.all_websites = []
         self.final_result = set()
         self.email_counter = 0
-        self.get
+        try:
+            self.get_scraped_data()
+        except:
+            print("data not available")
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -123,9 +128,9 @@ class Scraper:
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
+            # chrome_options.add_argument('--disable-dev-shm-usage')
+            # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+            driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
             try:
                 with switch_collection(MB_scraper, 'yelpscrapermailinglist') as MB_scraper:
                     MB_scraper.objects(user_id = self.userid, name = self.name).update(set__limit = self.limit)
@@ -136,7 +141,8 @@ class Scraper:
                         html = driver.page_source
                         soup = BeautifulSoup(html, 'html.parser')
                         # bussiness_list = soup.find('ul',class_="lemon--ul__373c0__1_cxs undefined list__373c0__2G8oH")
-                        bussiness_list = soup.find('ul',class_="lemon--ul__09f24__1_cxs undefined list__09f24__OXDHW")
+                        # bussiness_list = soup.find('ul',class_="lemon--ul__09f24__1_cxs undefined list__09f24__OXDHW")
+                        bussiness_list = soup.find('ul',class_="lemon--ul__09f24__1_cxs undefined list__09f24__17TsU")
                         lilist = bussiness_list.findChildren(['li'])
                         for li in lilist:
                             status = 'Scraping website'
@@ -160,26 +166,11 @@ class Scraper:
                             else:
                                 self.all_websites.append(business_name)
                             
-                            state_ = "CA"
                             address_line2, street, city, state = ' '*4
                             postal_code, telephone = 0, 0
 
-                            address_container = profile_soup.find("address", class_ = "lemon--address__373c0__2sPac")
-                            if address_container != None  
-                                address_elements =  address_container.findAll("p")
-                                for address_element in address_elements:
-                                    try:
-                                        address = address_element.find('span').text
-                                    except:
-                                        continue
-                                    if "St " in address or " St" in address:
-                                        street = address
-                                    elif state_ in address or state_ in address:
-                                        address_2 = address
-                                        city, address_3 = address_2.split(',')
-                                        _, state, postal_code = address_3.split(" ")
-                                    else:
-                                        address_line2 = address
+                            get_direction = profile_soup.find("a", string = "Get Directions")
+
                             if profile_soup.find("p", string="Phone number") != None:
                                 if profile_soup.find("p", string="Phone number").findNext('p') != None:
                                         telephone = self.get_telephone_no(profile_soup.find("p", string="Phone number").findNext('p').text)
@@ -191,6 +182,44 @@ class Scraper:
                                 print("Link Not Found")
                                 print("https://www.yelp.com/" + link['href'])
                                 continue
+                            if get_direction == None:
+                                print("No direction")
+                            else:
+                                try:
+                                    get_direction_link = "https://www.yelp.com/" + get_direction["href"]
+                                    driver.get(get_direction_link)
+                                    address_page = driver.page_source
+                                    address_soup = BeautifulSoup(address_page, 'html.parser')
+                                    address = address_soup.find("address").text
+                                    address = address.replace('\n', '')
+                                    address_comp_list = address.split(', ')
+                                    ls_len = len(address_comp_list)
+                                    if ls_len == 4:
+                                        address_line2, street, city, state = address_comp_list
+                                    elif ls_len == 3:
+                                        street, city, state = address_comp_list
+                                    elif ls_len == 2:
+                                        city, state = address_comp_list
+                                    elif ls_len == 1:
+                                        state = address_comp_list[0]
+                                    elif ls_len > 4:
+                                        street, city, state = address_comp_list[-3:]
+                                        address_line2 = ', '.join(address_comp_list)
+                                    
+                                    address_line2 = address_line2.strip()
+                                    street = street.strip()
+                                    city = city.strip()
+                                    state = state.strip()
+
+                                    if state != '':
+                                        try:
+                                            state, postal_code = state.split(' ')
+                                            postal_code = int(postal_code)
+                                        except:
+                                            print("Problem in Postal Code")
+                                except:
+                                    print("Unable to get Direction")
+
                             try:
                                 driver.get("http://"+websitelink.text)
                             except:
@@ -235,13 +264,13 @@ class Scraper:
                                 website_object.telephone = data_dict["Telephone"]
                             if postal_code != 0:
                                 website_object.postal_code = data_dict["Postal_Code"]
-                            if street != ' ':
+                            if street != '':
                                 website_object.Address_line1 = data_dict["Street"]
-                            if state != ' ':
+                            if state != '':
                                 website_object.state = data_dict["State"]
-                            if city != ' ':
+                            if city != '':
                                 website_object.city = data_dict["city"]
-                            if address_line2 != ' ':
+                            if address_line2 != '':
                                 website_object.city = data_dict["Address_line2"]
                     
                             self.AllInternalEmails.clear()
@@ -265,9 +294,9 @@ class Scraper:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('user_id',type=str,nargs='?',default='devasish',help='Enter userid')
-    parser.add_argument('name',type=str,nargs='?',default='yelpscraper',help='Enter name')
-    parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Therapist'),help='Enter keyword')
-    parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Los Angeles, CA'),help='Enter city')
+    parser.add_argument('name',type=str,nargs='?',default='MB_Realtor',help='Enter name')
+    parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Realtor'),help='Enter keyword')
+    parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Manhattan Beach, CA'),help='Enter city')
     parser.add_argument('limit',type=int,nargs='?',default=15,help='Enter limit')
     args = parser.parse_args()
 
