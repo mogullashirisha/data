@@ -21,7 +21,7 @@ class Website(EmbeddedDocument):
     website_link = StringField(max_length=250, required=True)
     category = StringField(max_length=250, required=True)
     emails = ListField(EmailField())
-    telephone = IntField(min_value=0, max_value=9999999999)
+    telephone = IntField(min_value=0)
     postal_code = IntField()
     state = StringField()
     city = StringField()
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'manhattanbeach_scraper', help='Enter name')
     parser.add_argument('id', type=str, nargs='?', default = "5f57a3f6b011042085c43c57", help = "Object Id")
-    parser.add_argument('--category', type=str, nargs='?', default = "Automotive & Marine", help='Enter limit')
+    parser.add_argument('--category', type=str, nargs='?', default = "Dine", help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
