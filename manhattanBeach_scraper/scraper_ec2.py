@@ -52,7 +52,10 @@ class Scraper:
         self.email_counter = 0
         self.website_scrapped = {}
         self.all_websites = []
-        self.get_scraped_data()
+        try:
+            self.get_scraped_data()
+        except:
+            print("No old data")
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
