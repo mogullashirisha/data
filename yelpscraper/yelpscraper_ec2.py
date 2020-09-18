@@ -28,7 +28,7 @@ class Website(EmbeddedDocument):
     Address_line1 = StringField()
 
 class MB_scraper(Document):
-    user_id = StringField(max_length=120, required=True)
+    userid = StringField(max_length=120, required=True)
     name = StringField(max_length=120, required=True)
     status = StringField(max_length=120)
     city = StringField(max_length=250)
@@ -98,7 +98,7 @@ class Scraper:
 
     def get_scraped_data(self):
         client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
-        query={'user_id': self.userid,'name': self.name}
+        query={'userid': self.userid,'name': self.name}
         db = client["codemarket_devasish"]
         collection = db[self.collections]
         document = collection.find_one(query)
@@ -136,8 +136,8 @@ class Scraper:
             try:
                 with switch_collection(MB_scraper, self.collections) as MB_scraper:
                     if self.flag == 0:
-                        MB_scraper.objects(user_id = self.userid, name = self.name).update(push__keywords = self.keyword)
-                        MB_scraper.objects(user_id = self.userid, name = self.name).update(set__limit = self.limit)
+                        MB_scraper.objects(userid = self.userid, name = self.name).update(push__keywords = self.keyword)
+                        MB_scraper.objects(userid = self.userid, name = self.name).update(set__limit = self.limit)
                     for start in range(0, self.limit * 10 , 10):
                         url = self.get_url(start)
                         # print(url)
@@ -151,7 +151,7 @@ class Scraper:
                         for li in lilist:
                             status = 'Scraping website'
                             self.email_counter = 0
-                            MB_scraper.objects(user_id = self.userid, name = self.name).update(set__status = status)
+                            MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = status)
                             # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1G70M link-color--inherit__373c0__3dzpk link-size--inherit__373c0__1VFlE')
                             # link = li.find('a',class_='lemon--a__373c0__IEZFH link__373c0__1UGBs photo-box-link__373c0__1AMDk link-color--blue-dark__373c0__12C_y link-size--default__373c0__3m55w')
                             link = li.find('a',class_="lemon--a__09f24__IEZFH link__09f24__1kwXV link-color--inherit__09f24__3PYlA link-size--inherit__09f24__2Uj95")
@@ -286,14 +286,14 @@ class Scraper:
                                 self.AllInternalEmails.clear()
                                 
                                 try:
-                                    MB_scraper.objects(user_id = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
-                                    MB_scraper.objects(user_id = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
-                                    MB_scraper.objects(user_id = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
+                                    MB_scraper.objects(userid = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
+                                    MB_scraper.objects(userid = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
+                                    MB_scraper.objects(userid = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
                                 except:
                                     print("Not Unique Data")
 
                     
-                    MB_scraper.objects(user_id = self.userid, name = self.name).update(set__status = "Scraping Completed")
+                    MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = "Scraping Completed")
                     break
 
             except AttributeError:
@@ -303,14 +303,14 @@ class Scraper:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('user_id',type=str,nargs='?',default='devasish',help='Enter userid')
+    parser.add_argument('userid',type=str,nargs='?',default='devasish',help='Enter userid')
     parser.add_argument('name',type=str,nargs='?',default='yelp_scraper',help='Enter name')
     parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Realtor'),help='Enter keyword')
     parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Manhattan Beach, CA'),help='Enter city')
     parser.add_argument('limit',type=int,nargs='?',default=24,help='Enter limit')
     args = parser.parse_args()
 
-    userid = args.user_id
+    userid = args.userid
     name = args.name
     keyword = args.keyword
     city = args.city

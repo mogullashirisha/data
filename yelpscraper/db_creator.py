@@ -19,7 +19,7 @@ class Website(EmbeddedDocument):
     Address_line1 = StringField()
 
 class MB_scraper(Document):
-    user_id = StringField(max_length=120, required=True)
+    userid = StringField(max_length=120, required=True)
     name = StringField(max_length=120, required=True)
     status = StringField(max_length=120)
     city = StringField(max_length=250)
@@ -33,7 +33,7 @@ class MB_scraper(Document):
 connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
 with switch_collection(MB_scraper, 'Yelp') as MB_scraper:
     mbscrape = MB_scraper()
-    mbscrape.user_id = "devasish"
+    mbscrape.userid = "devasish"
     mbscrape.name = "yelp_scraper"
     mbscrape.status = "Scraping Started"
     mbscrape.keywords = []
@@ -42,4 +42,4 @@ with switch_collection(MB_scraper, 'Yelp') as MB_scraper:
     mbscrape.email_counter = 0
     mbscrape.collection_of_email_scraped = []
     mbscrape.save()
-    print(f"{mbscrape.user_id},{mbscrape.name},{urllib.parse.quote_plus(mbscrape.keywords)},{urllib.parse.quote_plus(mbscrape.city)},10")
+    print(f"{mbscrape.userid},{mbscrape.name},{urllib.parse.quote_plus(mbscrape.keywords)},{urllib.parse.quote_plus(mbscrape.city)},10")
