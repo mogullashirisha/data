@@ -25,6 +25,7 @@ RUN python3 -m pip install --upgrade pip
 RUN pip3 install selenium
 RUN pip3 install pymongo
 RUN pip3 install dnspython
+RUN pip3 install mongoengine
 
 ADD linkedin_scrape.py linkedin_scrape.py
 ENTRYPOINT ["python3", "linkedin_scrape.py"]
