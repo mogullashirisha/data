@@ -131,8 +131,8 @@ class Scraper:
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
             chrome_options.add_argument('--disable-dev-shm-usage')
-            # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
+            driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
             try:
                 with switch_collection(MB_scraper, self.collections) as MB_scraper:
                     if self.flag == 0:
