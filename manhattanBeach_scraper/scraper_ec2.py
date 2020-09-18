@@ -257,7 +257,7 @@ if __name__ == '__main__':
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'manhattanbeach_scraper', help='Enter name')
     parser.add_argument('id', type=str, nargs='?', default = "5f57a3f6b011042085c43c57", help = "Object Id")
-    parser.add_argument('--category', type=str, nargs='?', default = "Dine", help='Enter limit')
+    parser.add_argument('--category', type=str, nargs='?', default = "Health and Fitness", help='Enter limit')
     args = parser.parse_args()
 
     userid = args.user_id
