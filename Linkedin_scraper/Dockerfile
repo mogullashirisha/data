@@ -21,7 +21,8 @@ RUN /usr/local/bin/chromedriver --version
 ENV DISPLAY=:99
 
 # Upgrade pip and install dependencies
-COPY /yelpscraper_ec2.py  /home/ubuntu/data/Linkedin_scraper/linkedin_scrape.py
+# COPY /yelpscraper_ec2.py  Linkedin_scraper/linkedin_scrape.py
+# WORKDIR Linkedin_scraper
 RUN python3 -m pip install --upgrade pip
 RUN pip3 install selenium
 RUN pip3 install pymongo

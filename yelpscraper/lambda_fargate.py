@@ -18,7 +18,7 @@ def lambda_handler(event, context):
     db = 'codemarket_devasish'
     client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote('sumi@')+'123@codemarket-staging.k16z7.mongodb.net/'+db+'?retryWrites=true&w=majority')
     database = client[db]
-    collection = database['yelpscrapermailinglist']
+    collection = database['Yelp']
     
     status = 'Scraping Started'
     query = {'user_id':userid,'name':name}
@@ -28,29 +28,23 @@ def lambda_handler(event, context):
         newvalues = {"$set":{"status":status}}
         collection.update_one(query,newvalues)
     else:
-        document = {'user_id':userid,
+        document = {'userid':userid,
                     'name': name,
-                    'keyword':keyword,
+                    'keywords':[keyword],
                     'city':city,
                     'limit': limit,
-                    'status': status,
-                    'created by':'UI',
-                    'created timestamp': '',
-                    'collection of email scraped':''
+                    'status': status
                 }
         
         collection.insert_one(document)
-
-    
     
     #encoding parameters
     keyword = urllib.parse.quote_plus(keyword)
     city = urllib.parse.quote_plus(city)
     
-    
     #vairable definition
     cluster = 'devasish_yelp'
-    task_definition = 'devasish_yelp:31'
+    task_definition = 'devasish_Yelp_high_performance:1'
     overrides = {"containerOverrides": [{'name':'devasish_yelp','command':[userid,name,keyword,city,limit]} ] }
    
     #running fargate task
