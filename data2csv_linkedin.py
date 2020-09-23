@@ -22,7 +22,7 @@ def start_database(db_name, collection_name):
 def get_data_from_db(db_name, collection_name, query, new_col, columns = None):
   collection = start_database(db_name, collection_name)
   document = collection.find_one(query)
-  data_email = document["collection_of_email_scraped"]
+  data_email = document["connection_details"]
   dataframe = pandas.DataFrame(data_email)
   dataframe = dataframe.rename(columns = new_col)
   m,_ = dataframe.shape
@@ -36,29 +36,24 @@ def convert_to_segment(dataframe):
   dataframe['ChannelType'] = ["EMAIL"]*m
   dataframe = dataframe.explode('Address').reset_index(drop=True)
   dataframe.Address = dataframe.Address.apply(lambda x: x.lower() if type(x) == str else np.nan)
-  dataframe = dataframe[dataframe['Address'].notna()]
+  dataframe.dropna(inplace= True)
   dataframe.drop_duplicates(inplace = True)
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
-def export(name = 'yelp_scraper'):
+def export():
     db = 'codemarket_devasish'
-    collection = 'Yelp' # 'Chamber_of_Commerce'
-    query =  {'userid':'devasish','name':name}
-    # columns = ["city"]
-    new_col = {"business_name":"Attributes.business_name",
-              "website_link": "Attributes.website_link",
-              "emails":"Address",
-              "keyword": "User.UserAttributes.keyword",
-              "telephone": "Attributes.telephone",
-              "postal_code": "Location.PostalCode",
-              "state": "Location.Region",
-              "city": "Location.City",
-              "street": "Attributes.address_Line1"
+    collection = 'LinkedIn'
+    query =  {'userid':'t7.devasishmahato@gmail.com'}
+    new_col = {"first_name":"User.UserAttributes.FirstName",
+              "last_name":"User.UserAttributes.LastName",
+              "email":"Address",
+              "company": "User.UserAttributes.Company"
               }
-    data = get_data_from_db(db, collection, query, new_col)
-    data = convert_to_segment(data)
-    data.to_csv(f"exports/yelp.csv",index=False)
+    df = get_data_from_db(db, collection, query, new_col)
+    df = convert_to_segment(df)
+    df.to_csv(f"exports/LinkedIn.csv",index=False)
+    
 
 if __name__ == "__main__":
   export()

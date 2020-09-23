@@ -41,11 +41,11 @@ def convert_to_segment(dataframe):
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
-def export(name = 'hermosa_beach_scraper'):
+def export(name = 'manhattanbeach_scraper'):
     db = 'codemarket_devasish'
     collection = 'Chamber_of_Commerce'
     query =  {'userid':'devasish','name':name}
-    columns = ["chamber_of_commerce"]
+    # columns = ["chamber_of_commerce"]
     new_col = {"business_name":"User.UserAttributes.business_name",
               "website_link": "Attributes.website_link",
               "emails":"Address",
@@ -56,9 +56,9 @@ def export(name = 'hermosa_beach_scraper'):
               "Address_line1": "Attributes.address_Line1",
               "city": "Location.City",
               }
-    df = get_data_from_db(db, collection, query, new_col , columns=columns)
+    df = get_data_from_db(db, collection, query, new_col)# , columns=columns)
     df = convert_to_segment(df)
-    df.to_csv(f"exports/hermosa_beach_COC.csv",index=False)
+    df.to_csv(f"exports/manhattan_beach_COC.csv",index=False)
     
 
 if __name__ == "__main__":
