@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import urllib.parse
 from mongoengine import *
+import pandas as pd
 from mongoengine.context_managers import switch_collection
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -28,6 +29,17 @@ class linkedin_scraper(Document):
     connection_details = EmbeddedDocumentListField(linkedin_connection)
     created_timestamp = DateTimeField()
     last_updated = DateTimeField()
+
+def get_scraped_data():
+    client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
+    query={'userid': username}
+    db = client["codemarket_devasish"]
+    collection = db["LinkedIn"]
+    document = collection.find_one(query)
+    data_email = document["connection_details"]
+    dataframe = pd.DataFrame(data_email)
+    col = dataframe.email.to_list()
+    return col
 
 # Checking if username and passwords are passed during run time 
 try :
@@ -52,14 +64,17 @@ message['Subject'] = 'Scraping notification from CodeMarket'   #The subject line
 
 url = "https://www.linkedin.com/login?fromSignIn=true&trk=guest_homepage-basic_nav-header-signin"
 
+all_connections = get_scraped_data()
+
 # Connecting with mongo Atlas to collection named jc_linkedin
 connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
 with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
 
-    ls = linkedin_scraper()
-    ls.userid = username
-    ls.created_timestamp = datetime.datetime.now()
-    ls.save()
+    if len(all_connections) == 0:
+        ls = linkedin_scraper()
+        ls.userid = username
+        ls.created_timestamp = datetime.datetime.now()
+        ls.save()
 
     ####### Use Below code when having chrome driver and chrome installed on env
     chrome_options = Options()
@@ -134,15 +149,15 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     '''
 
     #The body and the attachments for the mail
-    message.attach(MIMEText(mail_content, 'plain'))
-    #Create SMTP session for sending the mail
-    session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-    session.starttls() #enable security
-    session.login(sender_address, sender_pass) #login with mail_id and password
-    text = message.as_string()
-    session.sendmail(sender_address, receiver_address, text)
-    session.quit()
-    print('scraping started, email sent to user')
+    # message.attach(MIMEText(mail_content, 'plain'))
+    # #Create SMTP session for sending the mail
+    # session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+    # session.starttls() #enable security
+    # session.login(sender_address, sender_pass) #login with mail_id and password
+    # text = message.as_string()
+    # session.sendmail(sender_address, receiver_address, text)
+    # session.quit()
+    # print('scraping started, email sent to user')
 
     # Click My Network
     my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='nav.mynetwork']")))
@@ -192,9 +207,12 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         driver.get(link)
 
         # Get Name
-        name = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='flex-1 mr5']/ul/li")))
-        name = name.text
-        print(name)
+        try:
+            name = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='flex-1 mr5']/ul/li")))
+            name = name.text
+            print(name)
+        except:
+            continue
 
         # Get Company Name
         try:
@@ -228,10 +246,13 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         lc.company = company
         lc.email = email
         try:
-            linkedin_scraper.objects(userid = username).update(push__connection_details = lc)
-            linkedin_scraper.objects(userid = username).update(set__last_updated = datetime.datetime.now())
-            
-            print("Saved to Mongo")
+            if email not in all_connections:
+                linkedin_scraper.objects(userid = username).update(push__connection_details = lc)
+                linkedin_scraper.objects(userid = username).update(set__last_updated = datetime.datetime.now())
+                
+                print("Saved to Mongo")
+            else:
+                print("already present")
 
         except:
             print("Error while writing to Mongo Atlas")

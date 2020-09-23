@@ -34,9 +34,9 @@ def get_data_from_db(db_name, collection_name, query, new_col, columns = None):
 def convert_to_segment(dataframe):
   m,_ = dataframe.shape
   dataframe['ChannelType'] = ["EMAIL"]*m
-  dataframe = dataframe.explode('Address').reset_index(drop=True)
-  dataframe.Address = dataframe.Address.apply(lambda x: x.lower() if type(x) == str else np.nan)
-  dataframe.dropna(inplace= True)
+  # dataframe = dataframe.explode('Address').reset_index(drop=True)
+  # dataframe.Address = dataframe.Address.apply(lambda x: x.lower() if type(x) == str else np.nan)
+  # dataframe.dropna(inplace= True)
   dataframe.drop_duplicates(inplace = True)
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
@@ -44,7 +44,7 @@ def convert_to_segment(dataframe):
 def export():
     db = 'codemarket_devasish'
     collection = 'LinkedIn'
-    query =  {'userid':'t7.devasishmahato@gmail.com'}
+    query =  {'userid':'mysumifoods@gmail.com'}
     new_col = {"first_name":"User.UserAttributes.FirstName",
               "last_name":"User.UserAttributes.LastName",
               "email":"Address",
