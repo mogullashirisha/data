@@ -128,15 +128,15 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         '''
 
         #The body and the attachments for the mail
-        message.attach(MIMEText(mail_content_otp, 'plain'))
-        #Create SMTP session for sending the mail
-        session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-        session.starttls() #enable security
-        session.login(sender_address, sender_pass) #login with mail_id and password
-        text = message.as_string()
-        session.sendmail(sender_address, receiver_address, text)
-        session.quit()
-        print('OTP screen received while trying to login, email sent to user')
+        # message.attach(MIMEText(mail_content_otp, 'plain'))
+        # #Create SMTP session for sending the mail
+        # session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+        # session.starttls() #enable security
+        # session.login(sender_address, sender_pass) #login with mail_id and password
+        # text = message.as_string()
+        # session.sendmail(sender_address, receiver_address, text)
+        # session.quit()
+        # print('OTP screen received while trying to login, email sent to user')
 
 
     # if otp page not opened and login successful, send an email to user
