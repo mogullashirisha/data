@@ -19,10 +19,14 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import datetime
 
 class linkedin_connection(EmbeddedDocument):
+    linkedin = StringField()
     first_name = StringField()
     last_name = StringField()
     company = StringField()
     email = StringField()
+    website = StringField()
+    twitter = StringField()
+
 
 class linkedin_scraper(Document):
     userid = StringField()
@@ -36,9 +40,9 @@ def get_scraped_data():
     db = client["codemarket_devasish"]
     collection = db["LinkedIn"]
     document = collection.find_one(query)
-    data_email = document["connection_details"]
-    dataframe = pd.DataFrame(data_email)
-    col = dataframe.email.to_list()
+    data = document["connection_details"]
+    dataframe = pd.DataFrame(data)
+    col = dataframe.linkedin.to_list()
     return col
 
 # Checking if username and passwords are passed during run time 
@@ -50,7 +54,7 @@ try :
         raise NameError("Linkedin Username and Password not found")
 
 except NameError:
-    raise 
+    raise
 
 #The mail addresses and password
 sender_address = 'wrath.devasishmahato@gmail.com'
@@ -64,12 +68,14 @@ message['Subject'] = 'Scraping notification from CodeMarket'   #The subject line
 
 url = "https://www.linkedin.com/login?fromSignIn=true&trk=guest_homepage-basic_nav-header-signin"
 
-all_connections = get_scraped_data()
+try:
+    all_connections = get_scraped_data()
+except:
+    all_connections = []
 
 # Connecting with mongo Atlas to collection named jc_linkedin
 connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
 with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
-
     if len(all_connections) == 0:
         ls = linkedin_scraper()
         ls.userid = username
@@ -93,7 +99,6 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     wait = WebDriverWait(driver, 50)
     # Getting main window handle for controlling active window
     main_handle = driver.current_window_handle
-
 
     # Enter Username
     element = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@id='username']")))
@@ -221,7 +226,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         except:
             company = None    
 
-        print(company)    
+        print(company)
 
         # Click Contact Info 
         connections = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='contact_see_more']")))
@@ -234,6 +239,21 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
             email = email.text
         except:
             email = None
+        try:
+            linkedin = wait.until(EC.visibility_of_element_located((By.XPATH, "//section[@class='pv-contact-info__contact-type ci-vanity-url']/div/a")))
+            linkedin = linkedin.text
+        except:
+            continue
+        try:
+            twitter = wait.until(EC.visibility_of_element_located((By.XPATH, "//section[@class='pv-contact-info__contact-type ci-twitter']/ul/li/a")))
+            twitter = twitter.text
+        except:
+            twitter = None
+        try:
+            website = wait.until(EC.visibility_of_element_located((By.XPATH, "//section[@class='pv-contact-info__contact-type ci-website']/ul/li/div/a")))
+            website = website.text
+        except:
+            website = None
         
         print(email)
 
@@ -245,14 +265,25 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         lc.last_name = last_name
         lc.company = company
         lc.email = email
+        lc.linkedin = linkedin
+        lc.website = website
+        lc.twitter = twitter
         try:
-            if email not in all_connections:
+            if linkedin not in all_connections:
                 linkedin_scraper.objects(userid = username).update(push__connection_details = lc)
-                linkedin_scraper.objects(userid = username).update(set__last_updated = datetime.datetime.now())
-                
-                print("Saved to Mongo")
             else:
-                print("already present")
+                if twitter != None:
+                    linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__twitter =  twitter)
+                if website != None:
+                    linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__website = website)
+                if email != None:
+                    linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__email = email)
+                if company != None:
+                    linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__company = company)
+                linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__first_name = first_name)
+                linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__last_name = last_name)
+            linkedin_scraper.objects(userid = username).update(set__last_updated = datetime.datetime.now())
+            print("Saved to Mongo")
 
         except:
             print("Error while writing to Mongo Atlas")
