@@ -28,6 +28,7 @@ RUN pip3 install selenium
 RUN pip3 install pymongo
 RUN pip3 install dnspython
 RUN pip3 install mongoengine
+RUN pip3 install pandas
 
 ADD linkedin_scrape.py linkedin_scrape.py
 ENTRYPOINT ["python3", "linkedin_scrape.py"]

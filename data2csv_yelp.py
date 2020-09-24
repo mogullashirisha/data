@@ -41,7 +41,7 @@ def convert_to_segment(dataframe):
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
-def export(name = 'yelp_scraper'):
+def export(name = 'yelp_HB'):
     db = 'codemarket_devasish'
     collection = 'Yelp' # 'Chamber_of_Commerce'
     query =  {'userid':'devasish','name':name}
@@ -58,7 +58,7 @@ def export(name = 'yelp_scraper'):
               }
     data = get_data_from_db(db, collection, query, new_col)
     data = convert_to_segment(data)
-    data.to_csv(f"exports/yelp.csv",index=False)
+    data.to_csv(f"exports/yelp_HB.csv",index=False)
 
 if __name__ == "__main__":
   export()

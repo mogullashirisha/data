@@ -84,6 +84,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
 
     ####### Use Below code when having chrome driver and chrome installed on env
     chrome_options = Options()
+    chrome_options.add_extension("extension.crx")
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-gpu")
@@ -109,6 +110,8 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     element = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@id='password']")))
     element.clear()
     element.send_keys(password)
+
+    print(username, password)
 
     # Click Sign In Button
     signin_btn = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@type='submit']")))
@@ -141,7 +144,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         # text = message.as_string()
         # session.sendmail(sender_address, receiver_address, text)
         # session.quit()
-        # print('OTP screen received while trying to login, email sent to user')
+        print('OTP screen received while trying to login, email sent to user')
 
 
     # if otp page not opened and login successful, send an email to user
@@ -162,7 +165,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     # text = message.as_string()
     # session.sendmail(sender_address, receiver_address, text)
     # session.quit()
-    # print('scraping started, email sent to user')
+    print('scraping started, email sent to user')
 
     # Click My Network
     try:
