@@ -87,9 +87,9 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-gpu")
-    # chrome_options.add_argument('--disable-dev-shm-usage')
-    # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-    driver = webdriver.Chrome('E:/Codes/chromedriver.exe', chrome_options=chrome_options)
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+    # driver = webdriver.Chrome('E:/Codes/chromedriver.exe', chrome_options=chrome_options)
 
     driver.get(url)
     print("linkedin opened")
@@ -165,10 +165,12 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     # print('scraping started, email sent to user')
 
     # Click My Network
-    my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='nav.mynetwork']")))
-    # driver.get('https://www.linkedin.com/mynetwork/')
-    print("On my network page")
-    my_network.click()
+    try:
+        my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='nav.mynetwork']")))
+        print("On my network page")
+        my_network.click()
+    except:
+        driver.get('https://www.linkedin.com/mynetwork/')
 
     # Get Total Connections and convert it to integer
     connect_val = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='connections']/div/div[2]")))
