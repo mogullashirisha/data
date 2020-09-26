@@ -5,6 +5,7 @@ import urllib.parse
 import argparse
 import datetime
 from sys import stdout
+import argparse
 
 class Website(EmbeddedDocument):
     business_name = StringField(max_length=250, required=True)
@@ -30,16 +31,35 @@ class MB_scraper(Document):
     last_updated = DateTimeField()
     collection_of_email_scraped = EmbeddedDocumentListField(Website)
 
-connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
-with switch_collection(MB_scraper, 'Yelp') as MB_scraper:
-    mbscrape = MB_scraper()
-    mbscrape.userid = "devasish"
-    mbscrape.name = "yelp_scraper"
-    mbscrape.status = "Scraping Started"
-    mbscrape.keywords = []
-    mbscrape.city = "Manhattan Beach, CA"
-    mbscrape.limit = 24
-    mbscrape.email_counter = 0
-    mbscrape.collection_of_email_scraped = []
-    mbscrape.save()
-    print(f"{mbscrape.userid},{mbscrape.name},{urllib.parse.quote_plus(mbscrape.keywords)},{urllib.parse.quote_plus(mbscrape.city)},10")
+def create_db(userid, name, keyword, city, limit, MB_scraper):
+    connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
+    with switch_collection(MB_scraper, 'Yelp') as MB_scraper:
+        mbscrape = MB_scraper()
+        mbscrape.userid = userid
+        mbscrape.name = name
+        mbscrape.status = "Scraping Started"
+        mbscrape.keywords = []
+        mbscrape.city = city
+        mbscrape.limit = limit
+        mbscrape.email_counter = 0
+        mbscrape.collection_of_email_scraped = []
+        mbscrape.save()
+        print(f"{mbscrape.userid},{mbscrape.name},{urllib.parse.quote_plus(mbscrape.keywords)},{urllib.parse.quote_plus(mbscrape.city)}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('userid',type=str,nargs='?', default='devasish', help='Enter userid')
+    parser.add_argument('name',type=str,nargs='?', default='yelp_scraper', help='Enter name')
+    parser.add_argument('keyword',type=str,nargs='?', default=urllib.parse.quote_plus('Realtor'), help='Enter keyword')
+    parser.add_argument('city',type=str,nargs='?', default=urllib.parse.quote_plus('Manhattan Beach, CA'), help='Enter city')
+    parser.add_argument('limit',type=int,nargs='?', default=24, help='Enter limit')
+    args = parser.parse_args()
+
+    userid = args.userid
+    name = args.name
+    keyword = args.keyword
+    city = args.city
+    limit = args.limit
+    print(userid,name,keyword,city,limit, MB_scraper)
+
+    create_db(userid, name, keyword, city, limit, MB_scraper)
