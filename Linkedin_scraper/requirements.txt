@@ -1,0 +1,5 @@
+selenium
+pymongo
+dnspython
+mongoengine
+pandas
