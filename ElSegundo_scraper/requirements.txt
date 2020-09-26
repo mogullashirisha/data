@@ -1,0 +1,9 @@
+requests
+bs4
+pandas==0.24.2
+selenium==3.141.0
+pymongo==3.10.1
+dnspython
+argparse
+mongoengine
+py3_validate_email
