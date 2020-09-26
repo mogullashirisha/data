@@ -88,7 +88,6 @@ class Scraper:
                     for em in new_emails:
                         if validate_email(em):
                             only_valid.add(em)
-                    self.email_counter += len(only_valid)
                     print("------VALID EMAIL SET------")
                     print(only_valid)
                     self.AllInternalEmails.update(only_valid)
@@ -96,16 +95,33 @@ class Scraper:
                     self.getInternalLinks(websitepage_soup,includeurl)
         return (internalLinks)
 
+    def create_db(self, collection, query):
+        status = 'Scraping Started'
+        document = collection.find_one(query)
+        
+        if document:
+            return document
+        else:
+            document = {'userid':userid,
+                        'name': name,
+                        'keywords':[keyword],
+                        'city':city,
+                        'limit': limit,
+                        'status': status
+                    }
+            collection.insert_one(document)
+    
     def get_scraped_data(self):
         client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
         query={'userid': self.userid,'name': self.name}
         db = client["codemarket_devasish"]
         collection = db[self.collections]
-        document = collection.find_one(query)
-        data_email = document["collection_of_email_scraped"]
-        dataframe = pd.DataFrame(data_email)
-        col = dataframe.business_name.to_list()
-        self.all_websites = col
+        document = self.create_db(collection, query)
+        if document:
+            data_email = document["collection_of_email_scraped"]
+            dataframe = pd.DataFrame(data_email)
+            col = dataframe.business_name.to_list()
+            self.all_websites = col
 
     def splitaddress(self,address):
         return (address.replace("http://", "").replace("https://", "").split("/"))
@@ -163,7 +179,8 @@ class Scraper:
                             profile = driver.page_source
                             profile_soup = BeautifulSoup(profile, 'html.parser')
                             websitelink = None
-                            business_name = profile_soup.find('h1',class_ = "lemon--h1__373c0__2ZHSL heading--h1__373c0___56D3 undefined heading--inline__373c0__1jeAh").text
+                            # lemon--h1__373c0__2ZHSL heading--h1__373c0___56D3 undefined heading--inline__373c0__1jeAh
+                            business_name = profile_soup.find('h1',class_ = "lemon--h1__373c0__2ZHSL heading--h1__373c0__dvYgw undefined heading--inline__373c0__10ozy").text
                             
                             address_line2, street, city, state = ' '*4
                             postal_code, telephone = 0, 0
@@ -257,7 +274,6 @@ class Scraper:
                                     if validate_email(em):
                                         only_valid.add(em)
                                 self.no_email = False
-                                self.email_counter += len(only_valid)
                                 print("/n------VALID EMAIL SET------")
                                 print(only_valid)
                                 self.AllInternalEmails.update(only_valid)
@@ -283,6 +299,7 @@ class Scraper:
                                 if address_line2 != '':
                                     website_object.city = address_line2
                         
+                                self.email_counter += len(self.AllInternalEmails)
                                 self.AllInternalEmails.clear()
                                 
                                 try:
