@@ -22,7 +22,7 @@ def start_database(db_name, collection_name):
 def get_data_from_db(db_name, collection_name, query, new_col, columns = None):
   collection = start_database(db_name, collection_name)
   document = collection.find_one(query)
-  data_email = document["connection_details"]
+  data_email = document["collection_of_email_scraped"]
   dataframe = pandas.DataFrame(data_email)
   dataframe = dataframe.rename(columns = new_col)
   m,_ = dataframe.shape
@@ -34,26 +34,38 @@ def get_data_from_db(db_name, collection_name, query, new_col, columns = None):
 def convert_to_segment(dataframe):
   m,_ = dataframe.shape
   dataframe['ChannelType'] = ["EMAIL"]*m
-  # dataframe = dataframe.explode('Address').reset_index(drop=True)
-  # dataframe.Address = dataframe.Address.apply(lambda x: x.lower() if type(x) == str else np.nan)
-  # dataframe.dropna(inplace= True)
+  dataframe = dataframe.explode('Address').reset_index(drop=True)
+  dataframe.Address = dataframe.Address.apply(lambda x: x.lower() if type(x) == str else np.nan)
+  dataframe = dataframe[dataframe['Address'].notna()]
   dataframe.drop_duplicates(inplace = True)
   dataframe = dataframe.reset_index(drop=True)
   return(dataframe)
 
-def export():
+def export(query):
     db = 'codemarket_devasish'
-    collection = 'LinkedIn'
-    query =  {'userid':'mysumifoods@gmail.com'}
-    new_col = {"first_name":"User.UserAttributes.FirstName",
-              "last_name":"User.UserAttributes.LastName",
-              "email":"Address",
-              "company": "User.UserAttributes.Company"
+    collection = 'Yelp'
+    new_col = {"business_name":"Attributes.business_name",
+              "website_link": "Attributes.website_link",
+              "emails":"Address",
+              "keyword": "User.UserAttributes.keyword",
+              "telephone": "Attributes.telephone",
+              "postal_code": "Location.PostalCode",
+              "state": "Location.Region",
+              "city": "Location.City",
+              "street": "Attributes.address_Line1"
               }
-    df = get_data_from_db(db, collection, query, new_col)
-    df = convert_to_segment(df)
-    df.to_csv(f"exports/LinkedIn.csv",index=False)
-    
+    data = get_data_from_db(db, collection, query, new_col)
+    data = convert_to_segment(data)
+    data.to_csv(f"{query['name']}.csv",index=False)
 
 if __name__ == "__main__":
-  export()
+  parser = argparse.ArgumentParser()
+  parser.add_argument('userid', type=str, nargs='?', default = 'sumi', help='Enter userid')
+  parser.add_argument('name', type=str, nargs='?', default = 'yelp_sumi_MB_Realtor', help='Enter name')
+  args = parser.parse_args()
+
+  userid = args.userid
+  name = args.name
+
+  query =  {'userid':userid,'name':name}
+  export(query)

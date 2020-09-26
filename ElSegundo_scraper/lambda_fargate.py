@@ -7,7 +7,7 @@ def lambda_handler(event, context):
     # TODO implement
 
     #reading parameters
-    userid = event["queryStringParameters"]["user_id"]
+    userid = event["queryStringParameters"]["userid"]
     name = event["queryStringParameters"]["name"]
     category = event["queryStringParameters"]["category"]
     

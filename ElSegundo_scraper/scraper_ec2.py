@@ -56,7 +56,7 @@ class Scraper:
         try:
             self.get_scraped_data()
         except:
-            print("NO data")
+            print("No data")
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -119,16 +119,30 @@ class Scraper:
     def get_telephone_no(self, telephone):
         return int(re.sub(r'[^\w]', '', telephone))
 
+    def create_db(self, collection, query):
+        status = 'Scraping Started'
+        document = collection.find_one(query)    
+        if document:
+            return document
+        else:
+            document ={ 'userid':userid,
+                        'name': name,
+                        'chamber_of_commerce':'El Segundo',
+                        'status': status
+                    }
+            collection.insert_one(document)
+    
     def get_scraped_data(self):
         client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
         query={'userid': self.userid,'name': self.name}
         db = client["codemarket_devasish"]
         collection = db["Chamber_of_Commerce"]
-        document = collection.find_one(query)
-        data_email = document["collection_of_email_scraped"]
-        dataframe = pd.DataFrame(data_email)
-        col = dataframe.business_name.to_list()
-        self.all_business = col
+        document = self.create_db(collection, query)
+        if document:
+            data_email = document["collection_of_email_scraped"]
+            dataframe = pd.DataFrame(data_email)
+            col = dataframe.business_name.to_list()
+            self.all_websites = col
 
     def scrape(self, MB_scraper):
         self.flag = 0
@@ -169,15 +183,54 @@ class Scraper:
                         print("already in data")
                         continue
                     print(business_name)
-                    websitelink = business['href']
-                    para = li.text.strip().split('\n')
-                    telephone = self.get_telephone_no(para[3][:13])
-                    address_line1 = para[1]
-                    address = para[2].split()
-                    postal_code = int(address.pop(-1))
-                    state = address.pop(-1)
-                    city = ' '.join(address)
+                    try:
+                        websitelink = business['href']
+                    except:
+                        websitelink = None
                     
+                    website_object = Website()
+                    website_object.business_name = business_name
+                    if websitelink:
+                        website_object.website_link = websitelink
+                    website_object.category = category
+                    try:
+                        MB_scraper.objects(userid = self.userid, name = self.name).update(push__collection_of_email_scraped = website_object)
+                    except:
+                        print("duplicate")
+                        
+                    para = li.text.strip().split('\n')
+                    try:
+                        telephone = self.get_telephone_no(para[3][:13])
+                        MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__telephone = telephone)
+                    except:
+                        print("No telephone")
+                    try:
+                        address_line1 = para[1]
+                        MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__Address_line1 = address_line1)
+                    except:
+                        print(f"Error in address {para[1]}")
+                    try:
+                        address = para[2].split()
+                        postal_code = int(address.pop(-1))
+                        MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__postal_code = postal_code)
+                        state = address.pop(-1)
+                        MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__state = state)
+                        city = ' '.join(address)
+                        MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__city = city)
+                    except:
+                        print(f"Error in address {para[2]}")
+                    
+                    new_emails = set(re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z0-9\.\-+_]+", str(li), re.I))
+                    only_valid = set()
+                    for em in new_emails:
+                        if validate_email(em):
+                            only_valid.add(em.lower())
+                    if len(only_valid) > 0:
+                        print("------VALID EMAIL SET------")
+                        print(only_valid)
+                    self.AllInternalEmails.update(only_valid)
+                    
+
                     self.driver.get(websitelink)
                     websitepage = self.driver.page_source
                     websiteSoup = BeautifulSoup(websitepage, 'html.parser')
@@ -195,23 +248,12 @@ class Scraper:
                     self.email_counter += len(self.AllInternalEmails)
                     self.AllInternalLinks.clear()
             
-                    website_object = Website()
-                    website_object.business_name = business_name
-                    website_object.website_link = websitelink
-                    website_object.category = category
                     website_object.emails = list(self.AllInternalEmails)
-                    website_object.telephone = telephone
-                    website_object.postal_code = postal_code
-                    website_object.Address_line1 = address_line1
-                    website_object.state = state
-                    website_object.city = city
-            
                     self.AllInternalEmails.clear()
                     
                     try:
-                        MB_scraper.objects(id = self.id).update(push__collection_of_email_scraped = website_object)
-                        MB_scraper.objects(id = self.id).update(inc__email_counter = self.email_counter)
-                        MB_scraper.objects(id = self.id).update(set__last_updated = datetime.datetime.now())
+                        MB_scraper.objects(userid = self.userid, name = self.name).update(inc__email_counter = self.email_counter)
+                        MB_scraper.objects(userid = self.userid, name = self.name).update(set__last_updated = datetime.datetime.now())
                     except:
                         print("Insertion Failed --- Data Not Unique")
         
