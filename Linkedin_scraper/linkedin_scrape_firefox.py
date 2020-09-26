@@ -1,5 +1,4 @@
 import sys
-print(sys.version)
 import time
 import pymongo
 import smtplib
@@ -13,7 +12,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import datetime
@@ -82,14 +81,15 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         ls.created_timestamp = datetime.datetime.now()
         ls.save()
 
-    ####### Use Below code when having chrome driver and chrome installed on env
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-gpu")
-    # chrome_options.add_argument('--disable-dev-shm-usage')
-    # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-    driver = webdriver.Chrome('E:/Codes/chromedriver.exe', chrome_options=chrome_options)
+    ####### Use Below code when having firefox driver and firefox installed on env
+    firefox_options = Options()
+    # firefox_options.add_extension("extension.crx")
+    # firefox_options.add_argument("--headless")
+    firefox_options.add_argument("--no-sandbox")
+    firefox_options.add_argument("--disable-gpu")
+    # firefox_options.add_argument('--disable-dev-shm-usage')
+    # driver = webdriver.firefox('/usr/local/bin/firefoxdriver',firefox_options=firefox_options)
+    driver = webdriver.Firefox('E:/Codes/geckodriver.exe', options=firefox_options)
 
     driver.get(url)
     print("linkedin opened")
@@ -109,6 +109,8 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     element = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@id='password']")))
     element.clear()
     element.send_keys(password)
+
+    print(username, password)
 
     # Click Sign In Button
     signin_btn = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@type='submit']")))
@@ -141,7 +143,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         # text = message.as_string()
         # session.sendmail(sender_address, receiver_address, text)
         # session.quit()
-        # print('OTP screen received while trying to login, email sent to user')
+        print('OTP screen received while trying to login, email sent to user')
 
 
     # if otp page not opened and login successful, send an email to user
@@ -162,7 +164,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     # text = message.as_string()
     # session.sendmail(sender_address, receiver_address, text)
     # session.quit()
-    # print('scraping started, email sent to user')
+    print('scraping started, email sent to user')
 
     # Click My Network
     try:

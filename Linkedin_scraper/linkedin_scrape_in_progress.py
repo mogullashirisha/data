@@ -1,5 +1,4 @@
 import sys
-print(sys.version)
 import time
 import pymongo
 import smtplib
@@ -110,6 +109,8 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     element.clear()
     element.send_keys(password)
 
+    print(username, password)
+
     # Click Sign In Button
     signin_btn = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@type='submit']")))
     signin_btn.click()
@@ -141,7 +142,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
         # text = message.as_string()
         # session.sendmail(sender_address, receiver_address, text)
         # session.quit()
-        # print('OTP screen received while trying to login, email sent to user')
+        print('OTP screen received while trying to login, email sent to user')
 
 
     # if otp page not opened and login successful, send an email to user
@@ -162,7 +163,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     # text = message.as_string()
     # session.sendmail(sender_address, receiver_address, text)
     # session.quit()
-    # print('scraping started, email sent to user')
+    print('scraping started, email sent to user')
 
     # Click My Network
     try:
@@ -229,6 +230,17 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
             company = None    
 
         print(company)
+        
+        #Education histroy
+        experience-section
+        try:
+            for i in range(1,4):
+                education = wait.until(EC.visibility_of_elements_located((By.XPATH,f"//section[@id='experience-section']/ul/li[{i}]/div/div/a/div[2]/div/h3")))
+                college_name = education.text
+                education = wait.until(EC.visibility_of_elements_located((By.XPATH,f"//section[@id='experience-section']/ul/li[{i}]/div/div/a/div[2]/div/p/span[2]")))
+                degree = 
+
+
 
         # Click Contact Info 
         connections = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='contact_see_more']")))
