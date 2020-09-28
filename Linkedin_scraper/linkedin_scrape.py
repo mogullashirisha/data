@@ -89,14 +89,14 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
     chrome_options.add_argument("--disable-gpu")
     # chrome_options.add_argument('--disable-dev-shm-usage')
     # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-    driver = webdriver.Chrome('E:/Codes/chromedriver.exe', chrome_options=chrome_options)
+    driver = webdriver.Chrome('E:/Codes/chromedriver.exe',)# chrome_options=chrome_options)
 
     driver.get(url)
     print("linkedin opened")
     # Implicit Wait Command
-    driver.implicitly_wait(10)
+    driver.implicitly_wait(20)
     # Explicit Wait command
-    wait = WebDriverWait(driver, 50)
+    wait = WebDriverWait(driver, 20)
     # Getting main window handle for controlling active window
     main_handle = driver.current_window_handle
 
@@ -209,7 +209,9 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
 
         connection = driver.find_element(By.XPATH, "//li[@class='mn-connection-card artdeco-list ember-view'][{}]/div/a".format(i))
         link = connection.get_attribute('href')
-
+        print(link.replace('https://www.', ''))
+        if link.replace('https://www.', '')[:-1] in all_connections:
+            continue
         driver.switch_to.window(sub_handle)
         driver.get(link)
 
@@ -226,9 +228,7 @@ with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
             company = wait.until(EC.visibility_of_element_located((By.XPATH, "//ul[@class='pv-top-card--experience-list']/li/a/span[1]")))
             company = company.text
         except:
-            company = None    
-
-        print(company)
+            company = None
 
         # Click Contact Info 
         connections = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='contact_see_more']")))
