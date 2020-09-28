@@ -298,6 +298,7 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
                 lc.linkedin = linkedin
                 lc.website = website
                 lc.twitter = twitter
+                lc.status = status
                 try:
                     if linkedin not in all_connections:
                         linkedin_scraper.objects(userid = username).update(push__connection_details = lc)
@@ -310,6 +311,7 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
                             linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__email = email)
                         if company != None:
                             linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__company = company)
+                        linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__status = status)
                         linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__first_name = first_name)
                         linkedin_scraper.objects(userid = username, connection_details__linkedin = linkedin).update(set__connection_details__S__last_name = last_name)
                     linkedin_scraper.objects(userid = username).update(set__last_updated = datetime.datetime.now())
@@ -358,9 +360,9 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('username',type=str,nargs='?',default='mysumifoods@gmail.com',help='Enter username')
-    parser.add_argument('password',type=str,nargs='?',default='Codemarket.123',help='Enter password')
-    parser.add_argument('start',type=int,nargs='?',default=1,help='Enter start limit')
+    parser.add_argument('username',type=str,nargs='?',default='t7.devasishmahato@gmail.com',help='Enter username')
+    parser.add_argument('password',type=str,nargs='?',default='123password$$',help='Enter password')
+    parser.add_argument('start',type=int,nargs='?',default=3,help='Enter start limit')
     parser.add_argument('end',type=int,nargs='?',default=10,help='Enter end limit')
     args = parser.parse_args()
 
