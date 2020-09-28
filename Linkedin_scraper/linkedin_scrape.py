@@ -71,7 +71,7 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
     chrome_options.add_argument("--disable-gpu")
     # chrome_options.add_argument('--disable-dev-shm-usage')
     # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-    driver = webdriver.Chrome('E:/Codes/chromedriver.exe'), options=chrome_options)
+    driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#, options=chrome_options)
 
     driver.get(url)
     print("linkedin opened")
@@ -149,7 +149,7 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
     print('LOGIN COMPLETE')
 
     # Click My Profile
-    my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//aside[@class='left-rail']/div/div[1]/a")))
+    my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//aside[@class='left-rail']/div/div[@class='feed-identity-module__actor-meta profile-rail-card__actor-meta break-words']/a")))
     print("On my profile page")
     my_network.click()
 
@@ -166,8 +166,12 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
         # Get Total Connections and convert it to integer
         connect_val = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='topcard_view_all_connections']/span")))
         total_connections = connect_val.text
-        total_connections = int(total_connections.replace(" connections",''))
-        print("Total Connections : ", total_connections)
+        try:
+            total_connections = int(total_connections.replace(" connections",''))
+            print("Total Connections : ", total_connections)
+        except ValueError:
+            total_connections = int(total_connections.replace("+ connections",''))
+            print("Total Connections : More than ", total_connections)
 
         # Click Connections 
         connections = driver.find_element(By.XPATH,"//a[@data-control-name='topcard_view_all_connections']")
@@ -354,8 +358,8 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('username',type=str,nargs='?',default='t7.devasishmahato@gmail.com',help='Enter username')
-    parser.add_argument('password',type=str,nargs='?',default='password',help='Enter password')
+    parser.add_argument('username',type=str,nargs='?',default='mysumifoods@gmail.com',help='Enter username')
+    parser.add_argument('password',type=str,nargs='?',default='Codemarket.123',help='Enter password')
     parser.add_argument('start',type=int,nargs='?',default=1,help='Enter start limit')
     parser.add_argument('end',type=int,nargs='?',default=10,help='Enter end limit')
     args = parser.parse_args()
