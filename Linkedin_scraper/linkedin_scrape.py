@@ -32,6 +32,7 @@ class linkedin_connection(EmbeddedDocument):
 class Linkedin_scraper(Document):
     userid = StringField()
     connection_details = EmbeddedDocumentListField(linkedin_connection)
+    otp = StringField()
     created_timestamp = DateTimeField()
     last_updated = DateTimeField()
 
@@ -49,7 +50,7 @@ def get_scraped_data():
 def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_scraper):
     #The mail addresses and password
     sender_address = 'wrath.devasishmahato@gmail.com'
-    sender_pass = '123codemarket$$'
+    sender_pass = '123codemarket'
     receiver_address = username
     #Setup the MIME
     message = MIMEMultipart()
@@ -69,9 +70,9 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-gpu")
-    # chrome_options.add_argument('--disable-dev-shm-usage')
-    # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-    driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#, options=chrome_options)
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+    # driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#, options=chrome_options)
 
     driver.get(url)
     print("linkedin opened")
@@ -96,63 +97,7 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
     signin_btn = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@type='submit']")))
     signin_btn.click()
 
-    # Check if otp page exists
-    otps = driver.find_elements(By.XPATH, "//input[@class='form__input--text input_verification_pin']")
-    if otps:
-        print("OTP Page appeared")
-        # otp = otps[0]
-        # otp.clear()
-        # element.send_keys(password)
-        # # Click Sign In Button
-        # signin_btn = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@type='submit']")))
-        # signin_btn.click()
-        
-        # if otp page opened, send an email to user
-        mail_content_otp = '''Hello,
-        Greetings from CodeMarket,
-
-        This is to inform you that we bumped on an otp page while trying to login your linkedin account for your scraping request. 
-        '''
-
-        #The body and the attachments for the mail
-        # message.attach(MIMEText(mail_content_otp, 'plain'))
-        # #Create SMTP session for sending the mail
-        # session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-        # session.starttls() #enable security
-        # session.login(sender_address, sender_pass) #login with mail_id and password
-        # text = message.as_string()
-        # session.sendmail(sender_address, receiver_address, text)
-        # session.quit()
-        print('OTP screen received while trying to login, email sent to user')
-
-
-    # if otp page not opened and login successful, send an email to user
-    mail_content = '''Hello,
-    Greetings from CodeMarket,
-
-    This is to inform you that we have started scraping your linkedin as per your request.
-
-    We will update you once we have completed the scraping process. 
-    '''
-
-    #The body and the attachments for the mail
-    # message.attach(MIMEText(mail_content, 'plain'))
-    # #Create SMTP session for sending the mail
-    # session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-    # session.starttls() #enable security
-    # session.login(sender_address, sender_pass) #login with mail_id and password
-    # text = message.as_string()
-    # session.sendmail(sender_address, receiver_address, text)
-    # session.quit()
-    print('scraping started, email sent to user')
-
-    print('LOGIN COMPLETE')
-
-    # Click My Profile
-    my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//aside[@class='left-rail']/div/div[@class='feed-identity-module__actor-meta profile-rail-card__actor-meta break-words']/a")))
-    print("On my profile page")
-    my_network.click()
-
+    
     # Connecting with mongo Atlas to collection named jc_linkedin
     connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
 
@@ -162,6 +107,71 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
             ls.userid = username
             ls.created_timestamp = datetime.datetime.now()
             ls.save()
+
+        # Check if otp page exists
+        otps = driver.find_elements(By.XPATH, "//input[@class='form__input--text input_verification_pin']")
+        if otps:
+            print("OTP Page appeared")
+            otp = otps[0]
+            otp.clear()
+            stop_flag = True
+            while stop_flag:
+                ls = linkedin_scraper.objects(userid = username)[0]
+                if ls.otp:
+                    stop_flag = False
+                element.send_keys(ls.otp)
+                # Click Sign In Button
+                signin_btn = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@type='submit']")))
+                signin_btn.click()
+                time.sleep(20)
+            
+            print('LOGIN COMPLETE')
+
+            linkedin_scraper.objects(userid = username).update(set__otp = None)
+
+            # if otp page opened, send an email to user
+            mail_content_otp = '''Hello,
+            Greetings from CodeMarket,
+
+            This is to inform you that we bumped on an otp page while trying to login your linkedin account for your scraping request. 
+            '''
+
+            #The body and the attachments for the mail
+            # message.attach(MIMEText(mail_content_otp, 'plain'))
+            # #Create SMTP session for sending the mail
+            # session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+            # session.starttls() #enable security
+            # session.login(sender_address, sender_pass) #login with mail_id and password
+            # text = message.as_string()
+            # session.sendmail(sender_address, receiver_address, text)
+            # session.quit()
+            print('OTP screen received while trying to login, email sent to user')
+
+
+        # if otp page not opened and login successful, send an email to user
+        mail_content = '''Hello,
+        Greetings from CodeMarket,
+
+        This is to inform you that we have started scraping your linkedin as per your request.
+
+        We will update you once we have completed the scraping process. 
+        '''
+
+        #The body and the attachments for the mail
+        # message.attach(MIMEText(mail_content, 'plain'))
+        # #Create SMTP session for sending the mail
+        # session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+        # session.starttls() #enable security
+        # session.login(sender_address, sender_pass) #login with mail_id and password
+        # text = message.as_string()
+        # session.sendmail(sender_address, receiver_address, text)
+        # session.quit()
+        print('scraping started, email sent to user')
+
+        # Click My Profile
+        my_network = wait.until(EC.visibility_of_element_located((By.XPATH, "//aside[@class='left-rail']/div/div[@class='feed-identity-module__actor-meta profile-rail-card__actor-meta break-words']/a")))
+        print("On my profile page")
+        my_network.click()
 
         # Get Total Connections and convert it to integer
         connect_val = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[@data-control-name='topcard_view_all_connections']/span")))
@@ -362,7 +372,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('username',type=str,nargs='?',default='t7.devasishmahato@gmail.com',help='Enter username')
     parser.add_argument('password',type=str,nargs='?',default='123password$$',help='Enter password')
-    parser.add_argument('start',type=int,nargs='?',default=3,help='Enter start limit')
+    parser.add_argument('start',type=int,nargs='?',default=1,help='Enter start limit')
     parser.add_argument('end',type=int,nargs='?',default=10,help='Enter end limit')
     args = parser.parse_args()
 
