@@ -34,19 +34,20 @@ class MB_scraper(Document):
     city = StringField(max_length=250)
     keywords = ListField(StringField(max_length=250))
     email_counter = IntField()
-    limit = IntField()
+    limit = StringField()
     created_timestamp = DateTimeField()
     last_updated = DateTimeField()
     collection_of_email_scraped = EmbeddedDocumentListField(Website)
 
 class Scraper:
-    def __init__(self,userid,name,keyword,city,limit):
+    def __init__(self,userid,name,keyword,city,start_limit, end_limit):
         self.userid = userid
         self.name = name
         self.keyword = keyword
         self.collections = "Yelp"
         self.city = city
-        self.limit = limit
+        self.start_limit = start_limit
+        self.end_limit = end_limit
         self.counter = 0
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
@@ -56,7 +57,7 @@ class Scraper:
         try:
             self.get_scraped_data()
         except:
-            print("data not available")
+            print(f"{self.userid} has no data available for {self.name}")
 
     def getInternalLinks(self,bsobj, includeurl):
         internalLinks = []
@@ -102,11 +103,11 @@ class Scraper:
         if document:
             return document
         else:
-            document = {'userid':userid,
-                        'name': name,
-                        'keywords':[keyword],
-                        'city':city,
-                        'limit': limit,
+            document = {'userid':self.userid,
+                        'name':self.name,
+                        'keywords':[self.keyword],
+                        'city':self.city,
+                        'limit':f"{self.start_limit} - {self.end_limit}",
                         'status': status
                     }
             collection.insert_one(document)
@@ -146,15 +147,15 @@ class Scraper:
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-gpu")
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-            # driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
+            # chrome_options.add_argument('--disable-dev-shm-usage')
+            # driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+            driver = webdriver.Chrome('E:/Codes/chromedriver.exe')#,chrome_options=chrome_options)
             try:
                 with switch_collection(MB_scraper, self.collections) as MB_scraper:
                     if self.flag == 0:
                         MB_scraper.objects(userid = self.userid, name = self.name).update(push__keywords = self.keyword)
-                        MB_scraper.objects(userid = self.userid, name = self.name).update(set__limit = self.limit)
-                    for start in range(0, self.limit * 10 , 10):
+                        MB_scraper.objects(userid = self.userid, name = self.name).update(set__limit = f"{self.start_limit} - {self.end_limit}")
+                    for start in range((self.start_limit -1) * 10, self.end_limit * 10 , 10):
                         url = self.get_url(start)
                         # print(url)
                         driver.get(url)
@@ -324,15 +325,17 @@ if __name__ == '__main__':
     parser.add_argument('name',type=str,nargs='?',default='yelp_scraper',help='Enter name')
     parser.add_argument('keyword',type=str,nargs='?',default=urllib.parse.quote_plus('Realtor'),help='Enter keyword')
     parser.add_argument('city',type=str,nargs='?',default=urllib.parse.quote_plus('Manhattan Beach, CA'),help='Enter city')
-    parser.add_argument('limit',type=int,nargs='?',default=24,help='Enter limit')
+    parser.add_argument('start_limit',type=int,nargs='?',default=1, help='Enter limit')
+    parser.add_argument('end_limit',type=int,nargs='?',default=24, help='Enter limit')
     args = parser.parse_args()
 
     userid = args.userid
     name = args.name
     keyword = args.keyword
     city = args.city
-    limit = args.limit
-    print(userid,name,keyword,city,limit)
+    start_limit = args.start_limit
+    end_limit = args.end_limit
+    print(userid, name, keyword, city, start_limit, end_limit)
 
-    scraper_obj = Scraper(userid,name,keyword,city,limit)
+    scraper_obj = Scraper(userid,name,keyword,city,start_limit, end_limit)
     scraper_obj.scrape(MB_scraper)
