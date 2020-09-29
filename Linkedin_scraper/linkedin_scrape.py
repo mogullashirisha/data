@@ -336,8 +336,8 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
 
     # Click on My Profile Button
     # myprofile = wait.until(EC.visibility_of_element_located((By.XPATH, "//li[@id='profile-nav-item']")))
-    myprofile = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@id='ember36']")))
-    myprofile.click()
+    # myprofile = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@id='ember36']")))
+    # myprofile.click()
 
     # Click Sign Out
     # signout = wait.until(EC.visibility_of_element_located((By.XPATH, "//a[text()='Sign out']")))
@@ -354,14 +354,14 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
     '''
 
     #The body and the attachments for the mail
-    message.attach(MIMEText(mail_content_done, 'plain'))
-    #Create SMTP session for sending the mail
-    session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-    session.starttls() #enable security
-    session.login(sender_address, sender_pass) #login with mail_id and password
-    text = message.as_string()
-    session.sendmail(sender_address, receiver_address, text)
-    session.quit()
+    # message.attach(MIMEText(mail_content_done, 'plain'))
+    # #Create SMTP session for sending the mail
+    # session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
+    # session.starttls() #enable security
+    # session.login(sender_address, sender_pass) #login with mail_id and password
+    # text = message.as_string()
+    # session.sendmail(sender_address, receiver_address, text)
+    # session.quit()
     print('scraping completed, email sent to user')
 
     # Close Browser
