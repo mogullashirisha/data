@@ -154,9 +154,9 @@ class Scraper:
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
-        # chrome_options.add_argument('--disable-dev-shm-usage')
-        # self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-        self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+        # self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
 
         with switch_collection(MB_scraper, 'Chamber_of_Commerce') as MB_scraper:
             print("Connection Established")
