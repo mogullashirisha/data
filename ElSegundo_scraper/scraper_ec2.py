@@ -42,10 +42,10 @@ class MB_scraper(Document):
 # class prev_data(HB_scraper):
 
 class Scraper:
-    def __init__(self, userid, name, id):
+    def __init__(self, userid, name, alpha):
         self.userid = userid
         self.name = name
-        self.id = id
+        self.alpha = alpha
         self.AllInternalLinks = set()
         self.AllInternalEmails = set()
         self.AllEmails = {}
@@ -131,6 +131,7 @@ class Scraper:
                         'status': status
                     }
             collection.insert_one(document)
+            print("New Data row created")
     
     def get_scraped_data(self):
         client = pymongo.MongoClient('mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
@@ -142,7 +143,7 @@ class Scraper:
             data_email = document["collection_of_email_scraped"]
             dataframe = pd.DataFrame(data_email)
             col = dataframe.business_name.to_list()
-            self.all_websites = col
+            self.all_business = col
 
     def scrape(self, MB_scraper):
         self.flag = 0
@@ -164,11 +165,12 @@ class Scraper:
             self.driver.get(url)
             html = self.driver.page_source
             soup = BeautifulSoup(html, 'html.parser')
-            lilist = soup.findAll("li")
+            ul = soup.find("a", {"name":self.alpha}).findParent().findNextSibling()
+            lilist = ul.findAll("li")
             for li in lilist:
                 cate = li.findChildren(['a'])
                 status = f'Scraping website'
-                MB_scraper.objects(id = self.id).update(set__status = status)
+                MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = status)
                 category = cate[0].text
                 category_url = cate[0]['href']
                 self.driver.get( "https://id21265.securedata.net/elsegund/autowebsite/" + category_url)
@@ -211,12 +213,15 @@ class Scraper:
                         print(f"Error in address {para[1]}")
                     try:
                         address = para[2].split()
-                        postal_code = int(address.pop(-1))
-                        MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__postal_code = postal_code)
+                        postal_code = address.pop(-1)
                         state = address.pop(-1)
                         MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__state = state)
                         city = ' '.join(address)
                         MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__city = city)
+                        try:
+                            MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__postal_code = int(postal_code))
+                        except:
+                            MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__postal_code = int(postal_code[:5]))
                     except:
                         print(f"Error in address {para[2]}")
                     
@@ -257,19 +262,19 @@ class Scraper:
                     except:
                         print("Insertion Failed --- Data Not Unique")
         
-            MB_scraper.objects(id = self.id).update(set__status = "Scraping Completed")
+            MB_scraper.objects(userid = self.userid, name = self.name).update(set__status = "Scraping Completed")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('user_id', type=str, nargs='?', default = 'devasish', help='Enter userid')
     parser.add_argument('name', type=str, nargs='?', default = 'El_Segundo_scraper', help='Enter name')
-    parser.add_argument('id', type=str, nargs='?', default = "5f6dad77a177df5818aa31d8", help = "Object Id")
+    parser.add_argument('alpha', type=str, nargs='?', default = 'A', help='Enter alphabet')
     args = parser.parse_args()
 
     userid = args.user_id
     name = args.name
-    id = args.id
+    alpha = args.alpha
     print(userid, name)
 
-    scraper_obj = Scraper(userid, name, id)
+    scraper_obj = Scraper(userid, name, alpha)
     scraper_obj.scrape(MB_scraper)
