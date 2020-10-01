@@ -21,9 +21,9 @@ ENV DISPLAY=:99
 
 # Install requirements first so this step is cached by Docker
 COPY /requirements.txt /home/ubuntu/data/yelpscraper/requirements.txt
-COPY /yelpscraper_ec2.py  /home/ubuntu/data/yelpscraper/scraper_ec2.py
+COPY /scraper_ec2.py  /home/ubuntu/data/yelpscraper/scraper_ec2.py
 WORKDIR /home/ubuntu/data/yelpscraper
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python","yelpscraper_ec2.py"]
+ENTRYPOINT ["python","scraper_ec2.py"]
