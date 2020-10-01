@@ -119,11 +119,12 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
                 ls = linkedin_scraper.objects(userid = username)[0]
                 if ls.otp:
                     stop_flag = False
-                    element.send_keys(ls.otp)
+                    otp.send_keys(ls.otp)
                     # Click Sign In Button
                     signin_btn = wait.until(EC.visibility_of_element_located((By.XPATH, "//button[@type='submit']")))
                     signin_btn.click()
                     print('LOGIN COMPLETE')
+                    break
                 else:
                     time.sleep(20)
 
