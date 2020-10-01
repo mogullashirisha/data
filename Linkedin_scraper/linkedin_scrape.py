@@ -112,6 +112,7 @@ def scrape(username, password, start, end = None, linkedin_scraper = Linkedin_sc
         otps = driver.find_elements(By.XPATH, "//input[@class='form__input--text input_verification_pin']")
         if otps:
             print("OTP Page appeared")
+            linkedin_scraper.objects(userid = username).update(set__otp = None)
             otp = otps[0]
             otp.clear()
             stop_flag = True
