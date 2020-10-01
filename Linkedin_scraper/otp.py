@@ -52,9 +52,11 @@ def get_scraped_data():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('username',type=str,nargs='?',default='mysumifoods@gmail.com',help='username')
     parser.add_argument('otp',type=str,nargs='?',default=None,help='OTP')
     args = parser.parse_args()
     otp = args.otp
+    username = args.username
     connect(db = 'codemarket_devasish', host = 'mongodb+srv://sumi:'+urllib.parse.quote_plus('sumi@123')+'@codemarket-staging.k16z7.mongodb.net/codemarket_devasish?retryWrites=true&w=majority')
     with switch_collection(linkedin_scraper, 'LinkedIn') as linkedin_scraper:
-      linkedin_scraper.objects(userid = 't7.devasishmahato@gmail.com').update(set__otp = otp)
+      linkedin_scraper.objects(userid = username).update(set__otp = otp)
