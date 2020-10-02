@@ -154,9 +154,9 @@ class Scraper:
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
-        # self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
+        # chrome_options.add_argument('--disable-dev-shm-usage')
+        # self.driver = webdriver.Chrome('/usr/local/bin/chromedriver',chrome_options=chrome_options)
+        self.driver = webdriver.Chrome('E:/Codes/chromedriver.exe',chrome_options=chrome_options)
 
         with switch_collection(MB_scraper, 'Chamber_of_Commerce') as MB_scraper:
             print("Connection Established")
@@ -253,7 +253,7 @@ class Scraper:
                     self.email_counter += len(self.AllInternalEmails)
                     self.AllInternalLinks.clear()
             
-                    website_object.emails = list(self.AllInternalEmails)
+                    MB_scraper.objects(userid = self.userid, name = self.name, collection_of_email_scraped__business_name = business_name).update(set__collection_of_email_scraped__S__emails = list(self.AllInternalEmails))
                     self.AllInternalEmails.clear()
                     
                     try:
